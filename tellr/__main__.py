@@ -12,15 +12,14 @@ setups/wrapper
 """
 
 
-import tellr.vcf_header as tellr_vcf_header 
-import tellr.variants as tellr_call_vars
+import vcf_header as tellr_vcf_header 
+import variants as tellr_call_vars
 
 def main():
     version = "0.0.0"
     parser= argparse.ArgumentParser(
         prog = 'tellr', 
-        description='calls non-reference transposable elements given in xx file in long-read pacbio or ont bam files', 
-        epilog='some help text'
+        description='calls non-reference transposable elements given in xx file in long-read pacbio or ont bam files'
     )
 
     parser.add_argument('-ref', '--ref', help='reference genome')
@@ -36,6 +35,11 @@ def main():
     if not os.path.isfile(args.TE_ref) :
         print('Error, cannot find TE reference file')
         quit()
+
+    
+
+    else:
+        parser.print_help()
 
     bam_name = args.bam
     bamfile = pysam.AlignmentFile(bam_name, "rb", reference_filename = args.ref)
