@@ -3,38 +3,54 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pysam
 import os
+import statistics
 
-def cluster(my_array, candidates_wid, read_toextract, bam_name, repeat_fasta, sample):
+def cluster(my_array, candidates_wid, read_toextract, bam_name, repeat_fasta, sample, clusterPosToName):
     """
     takes np array and uses DBSCAN to find clusters
-    of positions that can be intersting (min_samples according to sr threshold)
+    of positions that can be intersting (min_samples according to sr threshold) - to do
     """
-    print(my_array)
+    #print(my_array)
     db = DBSCAN(eps = 100, min_samples= 3).fit(my_array)
 
   
     labels = db.labels_
-    #print(labels)
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
     print('clusters' , n_clusters_)
     n_noise_ = list(labels).count(-1)
     print('noise', n_noise_)
 
+
+    #get reads of clusteres positions
+    clusterToPos = {}
     for i in range(0, len(my_array)):
         label = labels[i]
-        positions = my_array[i]
-        #print(positions)
-        read_id = candidates_wid[positions[0]][positions[1]] 
-        if label > 1:
-            read_toextract.add(read_id)
+        if int(label) < 0: #skip clustered labeled -1
+            continue 
+        array_pos = my_array[i]
+        if label not in clusterToPos:
+            clusterToPos[label] = []
+        clusterToPos[label].append(array_pos) #add list with [chr, pos]
 
-    txt_name = sample +'_reads.txt'
+    txt_name = sample + '_reads.txt'
     reads_txt = open(txt_name, 'w')
-    for read in read_toextract:
-        reads_txt.write(read+'\n')
+    #find reads in the cluster
+    for c in clusterToPos:
+        cluster_chr = list(set([p[0] for p in clusterToPos[c]]))[0]
+        all_positions = set([p[1] for p in clusterToPos[c]])
+        position = int(statistics.median(list(all_positions)))
+        #print(c, cluster_chr, all_positions)
+
+        #add read ids
+        for pos in all_positions:
+            read_ids = set(candidates_wid[str(cluster_chr)][pos])
+            for r in read_ids:
+                read_toextract.add(r)
+                clusterPosToName[r] = str(cluster_chr) + '-' + str(position)
+                reads_txt.write(r+'\n')
 
    
-    return db, txt_name
+    return db, txt_name, clusterPosToName
 
 
 
@@ -82,8 +98,9 @@ def plot(db, my_array):
 
 def main(candidates, candidates_id, bamfile, sample, bam_name, repeat_fasta):
     read_names = set([])
+    clusterPosToReadName = {}
     cand_array = np.array(candidates, dtype=object)
-    myclusters = cluster(cand_array, candidates_id, read_names, bam_name, repeat_fasta, sample)
+    myclusters = cluster(cand_array, candidates_id, read_names, bam_name, repeat_fasta, sample, clusterPosToReadName)
 
 
     #print(read_names)
