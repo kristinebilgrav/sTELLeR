@@ -3,7 +3,7 @@
 non-reference transposable element calling on long-read data 
 
 # Run
-require python, samtools, minimap2 and miniasm
+require python3, pysam, samtools, minimap2 and miniasm
 python tellr/tellr.py [-h] [-ref REF] -TE_fasta TE_FASTA -bam BAM -sr SR -TE_ref TE_REF
 
 

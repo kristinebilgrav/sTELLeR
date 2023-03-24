@@ -68,15 +68,17 @@ def main():
 
     repeatvariants =[]
     for chr in chrs:
-        print(chr)
+        print('finding candidates on', chr)        )
         #vcf_header=tellr_vcf_header.main(bam_header, sample_id, version, contigs)
         candidates = tellr_call_vars.main(chr, bamfile,bam_name, sample, chrs, chr_length, args.sr) 
+        print('clustering')
         clustered = tellr_cluster_vars.main(chr, candidates[0], candidates[1], bamfile, sample, bam_name, args.sr, repeat_fasta )
+        print('calling')
         calls = assembleandcall.main(chr, bam_name, repeat_fasta, sample, clustered[1], clustered[2], clustered[3], candidates[2], repeatsToAvoid, candidates[3]) 
         #print('main', calls)
         repeatvariants.append(list(calls))
     #assemble all calls to one cat
-    print(repeatvariants)
+    print('writing to file')
     write_calls.main(repeatvariants, chr, sample)
 
 

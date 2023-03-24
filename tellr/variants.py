@@ -22,8 +22,7 @@ def check_cigar(flag, cigar, threshold):
     if num_flags == 0:
         return False
     num_rounds =[]
-    print('cigar', cigar)
-    print('number of flags', num_flags)
+    
     
 
     add = 0
@@ -43,10 +42,9 @@ def check_cigar(flag, cigar, threshold):
             if c[1] > threshold: #threshold 
                 
                 num_rounds.append(c)
-                print('number of rounds' , num_rounds)
+            
                 basesToAdd.append(add)
                 if len(num_rounds) == num_flags:
-                    print('bases to add', basesToAdd)
                     return basesToAdd
             else:
                 continue
