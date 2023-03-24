@@ -16,6 +16,7 @@ import vcf_header as tellr_vcf_header
 import variants as tellr_call_vars
 import cluster as tellr_cluster_vars
 import assemble_calls as assembleandcall
+import write_vcf as write_calls
 
 def main():
     version = "0.0.0"
@@ -60,15 +61,24 @@ def main():
     chrs = []
     chr_length = {}
     for contig in bam_header["SQ"]:
-        thischr = contig["SN"].strip('chr')
+        thischr = contig["SN"]
         chrs.append(thischr)
         chr_length[thischr]=contig["LN"]
+    
 
+    repeatvariants =[]
+    for chr in chrs:
+        print(chr)
+        #vcf_header=tellr_vcf_header.main(bam_header, sample_id, version, contigs)
+        candidates = tellr_call_vars.main(chr, bamfile,bam_name, sample, chrs, chr_length, args.sr) 
+        clustered = tellr_cluster_vars.main(chr, candidates[0], candidates[1], bamfile, sample, bam_name, args.sr, repeat_fasta )
+        calls = assembleandcall.main(chr, bam_name, repeat_fasta, sample, clustered[1], clustered[2], clustered[3], candidates[2], repeatsToAvoid, candidates[3]) 
+        #print('main', calls)
+        repeatvariants.append(list(calls))
+    #assemble all calls to one cat
+    print(repeatvariants)
+    write_calls.main(repeatvariants, chr, sample)
 
-    #vcf_header=tellr_vcf_header.main(bam_header, sample_id, version, contigs)
-    candidates = tellr_call_vars.main(bamfile, sample, chrs, chr_length, args.sr) 
-    clustered = tellr_cluster_vars.main(candidates[0], candidates[1], bamfile, sample, bam_name, repeat_fasta )
-    calls = assembleandcall.main(bam_name, repeat_fasta, sample, clustered[1], candidates[2], clustered[2], repeatsToAvoid) 
 
 if __name__ == '__main__':
     main()

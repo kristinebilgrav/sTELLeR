@@ -5,52 +5,69 @@ import pysam
 import os
 import statistics
 
-def cluster(my_array, candidates_wid, read_toextract, bam_name, repeat_fasta, sample, clusterPosToName):
+def cluster(chr, my_array, candidates_wid, read_toextract, bam_name, repeat_fasta, sample, readName_toClusterId, sr): #fix so sample chr can be str
     """
     takes np array and uses DBSCAN to find clusters
     of positions that can be intersting (min_samples according to sr threshold) - to do
     """
-    #print(my_array)
-    db = DBSCAN(eps = 100, min_samples= 3).fit(my_array)
+
+    db = DBSCAN(eps = 100, min_samples= sr).fit(my_array)
 
   
-    labels = db.labels_
+    labels = db.labels_ #[0, -1, .....ncluster]
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
     print('clusters' , n_clusters_)
     n_noise_ = list(labels).count(-1)
     print('noise', n_noise_)
 
 
-    #get reads of clusteres positions
-    clusterToPos = {}
-    for i in range(0, len(my_array)):
-        label = labels[i]
-        if int(label) < 0: #skip clustered labeled -1
-            continue 
-        array_pos = my_array[i]
-        if label not in clusterToPos:
-            clusterToPos[label] = []
-        clusterToPos[label].append(array_pos) #add list with [chr, pos]
-
+    #get reads of clustered positions
     txt_name = sample + '_reads.txt'
     reads_txt = open(txt_name, 'w')
+    clusterToPos = {}
+    for i in range(0, len(my_array)): #map array to cluster
+        label = labels[i]
+        if int(label) < 0: #skip clusters labeled -1
+            continue 
+        array_pos = list(my_array[i])[0]
+
+        #find read name of position included in the cluster
+        read_ids = set(candidates_wid[array_pos])
+        for r in read_ids:
+            read_toextract.add(r)
+            if r not in readName_toClusterId:
+                readName_toClusterId[r] = set([])
+            readName_toClusterId[r].add(label)
+  
+        if label not in clusterToPos:
+            clusterToPos[label] = {}
+            clusterToPos[label] = set([])
+        clusterToPos[label].add(array_pos) #add to dict with label:set([pos]) -- change to consesnus position 
+
+    for theread in read_toextract:
+        reads_txt.write(theread+'\n')
+
+
+
+    
     #find reads in the cluster
-    for c in clusterToPos:
-        cluster_chr = list(set([p[0] for p in clusterToPos[c]]))[0]
-        all_positions = set([p[1] for p in clusterToPos[c]])
-        position = int(statistics.median(list(all_positions)))
+    #for c in clusterToPos:
+        #cluster_chr = list(set([p[0] for p in clusterToPos[c]]))[0]
+        #all_positions = set([p[1] for p in clusterToPos[c]])
+        #position = int(statistics.median(list(all_positions)))
         #print(c, cluster_chr, all_positions)
 
         #add read ids
-        for pos in all_positions:
-            read_ids = set(candidates_wid[str(cluster_chr)][pos])
-            for r in read_ids:
-                read_toextract.add(r)
-                clusterPosToName[r] = str(cluster_chr) + '-' + str(position)
-                reads_txt.write(r+'\n')
+        #for pos in all_positions:
+        #    read_ids = set(candidates_wid[str(cluster_chr)][pos])
+        #    for r in read_ids:
+        #        read_toextract.add(r)
+        #        clusterPosToName[r] = str(cluster_chr) + '-' + str(position)
+        #        reads_txt.write(r+'\n')
 
-   
-    return db, txt_name, clusterPosToName
+    print(clusterToPos)
+    return db, txt_name, readName_toClusterId, clusterToPos
+    #return text file to use in samtools, read names to clusters and clusters with the positions it contained. Can be used to map readname back to cluster and the respective postion of the split read
 
 
 
@@ -96,15 +113,14 @@ def plot(db, my_array):
 
 
 
-def main(candidates, candidates_id, bamfile, sample, bam_name, repeat_fasta):
+def main(chr, candidates, candidates_id, bamfile, sample, bam_name, sr, repeat_fasta):
     read_names = set([])
-    clusterPosToReadName = {}
-    cand_array = np.array(candidates, dtype=object)
-    myclusters = cluster(cand_array, candidates_id, read_names, bam_name, repeat_fasta, sample, clusterPosToReadName)
+    #clusterPosToReadName = {}
+    readName_toClusterId = {}
+    cand_array = np.array(candidates, dtype=object).reshape(-1, 1)
+    #print(cand_array)
+    myclusters = cluster(chr, cand_array, candidates_id, read_names, bam_name, repeat_fasta, sample, readName_toClusterId, sr)
 
-
-    #print(read_names)
-    #plot(myclusters[0], cand_array)
     return  myclusters
 
  

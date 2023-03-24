@@ -2,6 +2,7 @@ import sys
 import pysam
 import numpy as np
 
+
 """
 fetch split reads
 sort after split read size
@@ -9,38 +10,56 @@ get sequence
 compare sequence to input file
 """
 
-def check_cigar(flag, cigar, read, threshold):
-    basesToAdd=0
+def check_cigar(flag, cigar, threshold):
+    """
+    reads cigar tag and counts bases to where
+    the flag (type of var) is positioned
+    """
+    basesToAdd=[]
 
-    #num_flags = len([tup for tup in cigar if tup[0] == flag and tup[1] > threshold])
-    #print(num_flags)
+    num_flags = len([tup for tup in cigar if tup[0] == flag and tup[1] > threshold])
 
-
+    if num_flags == 0:
+        return False
+    num_rounds =[]
+    print('cigar', cigar)
+    print('number of flags', num_flags)
     
 
+    add = 0
+    if cigar[0][0] == flag:
+        add += int(cigar[0][1])
 
-    for c in cigar: 
+     
+    for c in cigar:
         if c[0] != flag:
-            basesToAdd += c[1]
+            add += c[1]
 
-            continue
-        else:   
-            if c[1] > threshold:
-                break
+        else: #matches flag
+            if c in num_rounds: #already counted
+                add += c[1]
+                continue
+
+            if c[1] > threshold: #threshold 
+                
+                num_rounds.append(c)
+                print('number of rounds' , num_rounds)
+                basesToAdd.append(add)
+                if len(num_rounds) == num_flags:
+                    print('bases to add', basesToAdd)
+                    return basesToAdd
             else:
                 continue
 
     return basesToAdd
 
-def get_region(bamfile, samples, chr, start, end, cand_dict, cand_id_dict, name_to_pos ):
+def get_region(bamfile, samples, chr, start, end, cand_list, cand_id_dict, name_to_pos, readstarts ):
     """
     extracts split reads from bam file to dictionaries
     """
-
+    appended = 0
     for read in bamfile.fetch(chr, start, end, until_eof=True):
-        chr = chr.strip('chr')
-        if chr not in cand_id_dict:
-            cand_id_dict[chr] = {}
+        #chr = chr.strip('chr')
 
         #print(chr, start, end)
 
@@ -52,38 +71,52 @@ def get_region(bamfile, samples, chr, start, end, cand_dict, cand_id_dict, name_
             continue
         
         #get all split reads in region with support from more than X
+        cigg = read.cigar
+        read_start_pos = read.pos
 
-        elif read.has_tag('SA') :
-            #explain_cigar = 0: matching, 1:insertion, 2:deletion, 3:ref_skip, 4:soft_clipped, 5:hard_clipped, 6:...
-            
+        if read.qname not in readstarts :
+            readstarts[read.qname] = read_start_pos
+        
+
+        #explain_cigar = 0: matching, 1:insertion, 2:deletion, 3:ref_skip, 4:soft_clipped, 5:hard_clipped, 6:...
+        #check for soft clipped 
+        soft_clipping = check_cigar(4, cigg, 150) #list w bases to add for each sfot clip OR false
+
+        #check for insertions
+        insertions = check_cigar(1, cigg, 150) # list w bases to add for each ins OR false
+        #print(cigg, soft_clipping, insertions, read.has_tag('SA'))
+ 
+        #either could be a TE 
+        if read.has_tag('SA') or soft_clipping or insertions :
 
             #find split read position
-            #reverse complement - oposite of others
-            cigg = read.cigar
-            #print(cigg)
-            read_start_pos = read.pos
-            soft_clipping = check_cigar(4, cigg, read, 100)
-            #print('soft')
-
-
-            insertions = check_cigar(1, cigg, read, 100)
-            #print('insertions')
-
+            #reverse complement - oposite of others?
+            
+            
             variants = [soft_clipping, insertions]
             for v in variants:
+                if v == False:
+                    continue
+                for add in v:
+                
+                    splitpos = read_start_pos + add
 
-                splitpos = read_start_pos + v
+                    #if read.is_reverse:
+                        #splitpos = read_start_pos - add
 
-                if read.is_reverse:
-                    splitpos = read_start_pos - v
+                #   add to list for clustering
+                    cand_list.append(splitpos)
 
-                #print(read_start_pos, splitpos)
-                cand_dict.append([chr, splitpos])
-                if splitpos not in cand_id_dict[chr]:
-                    cand_id_dict[chr][splitpos] = []
+                    #add to dict with chr:pos:[readname]
+                    if splitpos not in cand_id_dict:
+                        cand_id_dict[splitpos] = []
+                    cand_id_dict[splitpos].append(read.qname)
 
-                cand_id_dict[chr][splitpos].append(read.qname)
-                name_to_pos[read.qname] = str(chr) + '-' + str(splitpos)
+                    #add name to dict with readname:pos
+                    if read.qname not in name_to_pos:
+                        name_to_pos[read.qname] = []
+                    name_to_pos[read.qname].append(splitpos)
+                    appended += 1
 
             #append chr and pos of supplementary read
             #SR = read.get_tag('SA').rstrip(';').split(';')
@@ -92,29 +125,28 @@ def get_region(bamfile, samples, chr, start, end, cand_dict, cand_id_dict, name_
                 #if sa_chr not in cand_id_dict :
                 #    cand_id_dict[sa_chr] = {}
                 #sa_pos = int(sa.split(',')[1])
-                #cand_dict.append([sa_chr, sa_pos])
+                #cand_list.append([sa_chr, sa_pos])
                 #cand_id_dict[sa_chr][sa_pos] = 
 
         else:
             continue
-
-    return cand_dict, cand_id_dict, name_to_pos
+    #print('total variants', appended)
+    return cand_list, cand_id_dict, name_to_pos, readstarts
  
 
 
 
-def main(bamfile, samples, contigs, contig_length, sr):
-    #TEs = []
-    contigs = ['chr6']
-    candidates = [] #[chr, pos]
-    candidates_toid = {} #chr:{pos:[readname(s)]}
+def main(chr, bamfile,bam_name, sample, contigs, contig_length, sr):
+    
     name_to_pos = {} #readname:chr-pos
-    for chr in contigs: 
-        #if chr not in candidates:
+    candidates = [] #[pos] return for each chromosome
+    candidates_toid = {} #chr:{pos:[readname(s)]}
+    readstarts = {} #read:start
+    #if chr not in candidates:
             #candidates[chr] = []
-        chr_len = contig_length[chr.strip('chr')]
-        for bin in range(1, chr_len-1000000, 1000000):
-            get_region(bamfile, samples, chr, bin, bin+1000000, candidates, candidates_toid , name_to_pos) #returns candidates (dict with split read and its supplementaries) for clustering
+    chr_len = contig_length[chr]
+    for bin in range(1, chr_len-1000000, 1000000):
+        get_region(bamfile, sample, chr, bin, bin+1000000, candidates, candidates_toid , name_to_pos, readstarts) #returns candidates (dict with split read and its supplementaries) for clustering
 
-    return candidates, candidates_toid, name_to_pos
+    return candidates, candidates_toid, name_to_pos, readstarts
 
