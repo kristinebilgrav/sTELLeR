@@ -10,9 +10,10 @@ def cluster(chr, my_array, candidates_wid, read_toextract, bam_name, repeat_fast
     takes np array and uses DBSCAN to find clusters
     of positions that can be intersting (min_samples according to sr threshold) - to do
     """
-
-    db = DBSCAN(eps = 100, min_samples= sr).fit(my_array)
-
+    try:
+        db = DBSCAN(eps = 100, min_samples= sr).fit(my_array)
+    else:
+        continue
   
     labels = db.labels_ #[0, -1, .....ncluster]
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
@@ -65,7 +66,6 @@ def cluster(chr, my_array, candidates_wid, read_toextract, bam_name, repeat_fast
         #        clusterPosToName[r] = str(cluster_chr) + '-' + str(position)
         #        reads_txt.write(r+'\n')
 
-    print(clusterToPos)
     return db, txt_name, readName_toClusterId, clusterToPos
     #return text file to use in samtools, read names to clusters and clusters with the positions it contained. Can be used to map readname back to cluster and the respective postion of the split read
 

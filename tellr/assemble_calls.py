@@ -36,7 +36,7 @@ def de_novo(chr, bam_name, repeat_fasta, sample, readfile):
     #map_repeats = 'minimap2 -ax sr {}  {} >  {}'.format(denovo_fasta , repeat_fasta, aligned_repeats)
 
     #map fasta to TE fasta as short read 
-    map_repeats = 'minimap2 -ax sr {}  {}.fasta >  {}'.format(repeat_fasta,candidate_prefix, aligned_repeats)
+    map_repeats = 'minimap2 -ax map-ont {}  {}.fasta >  {}'.format(repeat_fasta,candidate_prefix, aligned_repeats)
     print(map_repeats)
     os.system(map_repeats) 
     
@@ -85,22 +85,26 @@ def breakpoints(chr, repeat_samfile,  sample, readNameToCluster, clusterToPos, r
     repeat_vars = []
     #for line in open(repeat_samfile):
     samfile = pysam.AlignmentFile(repeat_samfile, 'r')
-    for line in samfile.fetch():
+    samfile_header = samfile.header
+    TEs = {}
+    for te in samfile_header["SQ"]:
+        te = te["SN"]
+        length = te["LN"]
+        TEs[te] = length
+    
+        for line in samfile.fetch(te):
 
-        flag = line.flag
-        if flag in avoid_flags:
-            continue
+            flag = line.flag
+            if flag in avoid_flags:
+                continue
 
-        read = line.qname
-        r_start = line.pos 
-        repeat = line.reference_name
-        #print(read, repeat)
-        #connect start position in contig with position in read 
-        cigar = line.cigar
-        to_add = check_cigar(0, cigar, 100 )
-        #print(cigar, to_add)
-        #if to_add == False:
-        #    continue
+            read = line.qname
+            r_start = line.pos 
+            repeat = line.reference_name
+            #print(read, repeat)
+            #connect start position in contig with position in read 
+            cigar = line.cigar
+            to_add = check_cigar(0, cigar, 100 )
         
         
         #find position in this read: read start + start of repeat
@@ -159,8 +163,8 @@ def pos_toavoid(file): #change to pytabix
 
 
 def main(chr, bam_name, repeat_fasta, sample, readfile,  readNameToCluster, clusterToPos, read_topos, refrepeat, readstarts):
-    #aligned = de_novo(chr, bam_name, repeat_fasta, sample, readfile)
-    aligned = chr + '_' + sample + '_repeats.sam' 
+    aligned = de_novo(chr, bam_name, repeat_fasta, sample, readfile)
+    #    aligned = chr + '_' + sample + '_repeats.sam' 
     avoid= pos_toavoid(refrepeat)
     #variants = breakpoints(chr, aligned[0], aligned[1], sample, readNameToCluster, clusterToPos, avoid)
     variants = breakpoints(chr, aligned, sample, readNameToCluster, clusterToPos, read_topos, avoid, readstarts)

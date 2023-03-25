@@ -49,7 +49,7 @@ def main():
     bam_name = str(args.bam)
     bamfile = pysam.AlignmentFile(bam_name, "rb", reference_filename = args.ref)
     bam_header= bamfile.header
-    print(bam_header)
+
     
     #bamfile.close()
 
@@ -68,7 +68,7 @@ def main():
 
     repeatvariants =[]
     for chr in chrs:
-        print('finding candidates on', chr)        )
+        print('finding candidates on', chr)        
         #vcf_header=tellr_vcf_header.main(bam_header, sample_id, version, contigs)
         candidates = tellr_call_vars.main(chr, bamfile,bam_name, sample, chrs, chr_length, args.sr) 
         print('clustering')
