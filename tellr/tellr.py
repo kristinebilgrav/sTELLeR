@@ -73,13 +73,15 @@ def main():
         candidates = tellr_call_vars.main(chr, bamfile,bam_name, sample, chrs, chr_length, args.sr) 
         print('clustering')
         clustered = tellr_cluster_vars.main(chr, candidates[0], candidates[1], bamfile, sample, bam_name, args.sr, repeat_fasta )
+        if clustered == False:
+            continue
         print('calling')
         calls = assembleandcall.main(chr, bam_name, repeat_fasta, sample, clustered[1], clustered[2], clustered[3], candidates[2], repeatsToAvoid, candidates[3]) 
         #print('main', calls)
         repeatvariants.append(list(calls))
     #assemble all calls to one cat
     print('writing to file')
-    write_calls.main(repeatvariants, chr, sample)
+    write_calls.main(repeatvariants, chr_length, sample)
 
 
 if __name__ == '__main__':

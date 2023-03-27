@@ -12,15 +12,15 @@ def cluster(chr, my_array, candidates_wid, read_toextract, bam_name, repeat_fast
     """
     try:
         db = DBSCAN(eps = 100, min_samples= sr).fit(my_array)
-    else:
-        continue
+        labels = db.labels_ #[0, -1, .....ncluster]
+        n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+        print('clusters' , n_clusters_)
+        n_noise_ = list(labels).count(-1)
+        print('noise', n_noise_)
+    except:
+        print('no clusters found')
+        return False
   
-    labels = db.labels_ #[0, -1, .....ncluster]
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-    print('clusters' , n_clusters_)
-    n_noise_ = list(labels).count(-1)
-    print('noise', n_noise_)
-
 
     #get reads of clustered positions
     txt_name = sample + '_reads.txt'

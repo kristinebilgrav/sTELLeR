@@ -88,23 +88,23 @@ def breakpoints(chr, repeat_samfile,  sample, readNameToCluster, clusterToPos, r
     samfile_header = samfile.header
     TEs = {}
     for te in samfile_header["SQ"]:
-        te = te["SN"]
+        thete = te["SN"]
         length = te["LN"]
-        TEs[te] = length
+        TEs[thete] = length
     
-        for line in samfile.fetch(te):
+    for line in samfile.fetch():
 
-            flag = line.flag
-            if flag in avoid_flags:
-                continue
+        flag = line.flag
+        if flag in avoid_flags:
+            continue
 
-            read = line.qname
-            r_start = line.pos 
-            repeat = line.reference_name
-            #print(read, repeat)
-            #connect start position in contig with position in read 
-            cigar = line.cigar
-            to_add = check_cigar(0, cigar, 100 )
+        read = line.qname
+        r_start = line.pos 
+        repeat = line.reference_name
+        #print(read, repeat)
+        #connect start position in contig with position in read 
+        cigar = line.cigar
+        to_add = check_cigar(0, cigar, 100 )
         
         
         #find position in this read: read start + start of repeat
@@ -138,7 +138,7 @@ def breakpoints(chr, repeat_samfile,  sample, readNameToCluster, clusterToPos, r
                 #print('read starts at', readstarts[read])
                 #print('read split', readtopos[read])
                 #print(read, flag, repeat, start, cluster, chr, clusterconsensus)
-                lst = [repeat, chr, str(clusterconsensus)]
+                lst = [repeat, chr, str(clusterconsensus), str(clusterconsensus+ int(TEs[repeat])) ]
                 #print(lst)
                 if lst not in repeat_vars:
                     repeat_vars.append(lst)
