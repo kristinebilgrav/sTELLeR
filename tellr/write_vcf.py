@@ -20,20 +20,17 @@ def write_vcf(variants, filename, chr_lengths, sample):
 
     for entry in variants:
         for subentry in entry:
-            try:
-                te = subentry[0]
-                chr = subentry[1]
-                start = subentry[2]
-                end = subentry[3]
-                meinfo = ','.join(['MEINFO=' + te, str(start), str(end)])
-                svtype = 'SVTPE=INS' 
-                infoline = ';'.join(meinfo, svtype)
-                sampleformat = ':'.join([te,str(start) ])
-                outline = [chr, str(start), '.', '.', '<INS:ME>', '.', '.', infoline, 'TE:TS', sampleformat ]
-                file.write('\t'.join(outline) + '\n') 
-            except:
-                pass
-
+            te = subentry[0]
+            chr = subentry[1]
+            start = subentry[2]
+            end = subentry[3]
+            meinfo = ','.join(['MEINFO=' + te, str(start), str(end)])
+            svtype = 'SVTPE=INS' 
+            infoline = ';'.join([meinfo, svtype])
+            sampleformat = ':'.join([te,str(start) ])
+            outline = [chr, str(start), '.', '.', '<INS:ME>', '.', '.', infoline, 'TE:TS', sampleformat ]
+            file.write('\t'.join(outline) + '\n') 
+            
     return file
 
 

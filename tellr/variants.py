@@ -65,7 +65,7 @@ def get_region(bamfile, samples, chr, start, end, cand_list, cand_id_dict, name_
         if read.is_unmapped or read.is_duplicate or read.is_secondary:
             continue
 
-        elif read.mapping_quality < 5:
+        elif read.mapping_quality < 10:
             continue
         
         #get all split reads in region with support from more than X
