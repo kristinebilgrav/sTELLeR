@@ -28,8 +28,12 @@ def main():
     parser.add_argument('-ref', '--ref', help='reference genome')
     parser.add_argument('-TE_fasta', '--TE_fasta', help='fasta file with elements to be detected', required=True, type=pathlib.Path)
     parser.add_argument('-bam', '--bam', help='bam file', required= True, type=pathlib.Path)
-    parser.add_argument('-sr', '--sr', help='Minimum number of supporting split reads to call a variant (default 3)', required= False, default = 3)
+    parser.add_argument('-sr', '--sr', help='Minimum number of supporting split reads/insertions to call a variant (default 3)', required= False, default = 3)
     parser.add_argument('-TE_ref', '--TE_ref', help='bed file with positions to avoid', required= True, type=pathlib.Path)
+    parser.add_argument('-style', '--style', help='ont or pb', required= True, type=pathlib.Path)
+    parser.add_argument('-max_depth', '--max_depth', help='Maximum number of supporting split reads/insertions to call a variant (default 100)', required= False, default = 100)
+
+
 
     args = parser.parse_args()
 
@@ -46,6 +50,8 @@ def main():
 
     repeat_fasta = args.TE_fasta
     sr = int(args.sr)
+    max_depth = int(args.max_depth)
+    style = args.style
     repeatsToAvoid = args.TE_ref
     bam_name = str(args.bam)
     bamfile = pysam.AlignmentFile(bam_name, "rb", reference_filename = args.ref)
@@ -78,12 +84,12 @@ def main():
         if clustered == False:
             continue
         print('calling')
-        calls = assembleandcall.main(chr, bam_name, repeat_fasta, sample, clustered[1], clustered[2], clustered[3], candidates[2], repeatsToAvoid, candidates[3]) 
+        calls = assembleandcall.main(chr, bam_name, repeat_fasta, sample, clustered[1], clustered[2], clustered[3], candidates[2], repeatsToAvoid, candidates[3], max_depth) 
         #print('main', calls)
         repeatvariants.append(list(calls))
 
     print('writing to file')
-    write_calls.main(repeatvariants, chr_length, sample)
+    write_calls.main(repeatvariants, chr_length, sample, chrs)
 
 
 if __name__ == '__main__':

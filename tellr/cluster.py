@@ -8,7 +8,8 @@ import statistics
 def cluster(chr, my_array, candidates_wid, read_toextract, bam_name, repeat_fasta, sample, readName_toClusterId, sr): #fix so sample chr can be str
     """
     takes np array and uses DBSCAN to find clusters
-    of positions that can be intersting (min_samples according to sr threshold) - to do
+    of positions that can be intersting (min_samples according to sr threshold) 
+    distance between clusters: eps 100
     """
     try:
         db = DBSCAN(eps = 100, min_samples= sr).fit(my_array)
@@ -47,8 +48,6 @@ def cluster(chr, my_array, candidates_wid, read_toextract, bam_name, repeat_fast
 
     for theread in read_toextract:
         reads_txt.write(theread+'\n')
-
-
 
     
     #find reads in the cluster

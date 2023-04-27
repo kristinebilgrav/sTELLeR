@@ -1,5 +1,5 @@
 import sys
-
+import os
 
 def write_vcf(variants, filename, chr_lengths, sample):
     file =open(filename, 'w')
@@ -33,7 +33,16 @@ def write_vcf(variants, filename, chr_lengths, sample):
             
     return file
 
+def del_files(sample,chrs ):
+    os.system('rm {}_reads.txt'.format(sample))
+    for chr in chrs: 
+        candidate_prefix = chr + '_' + sample + '_candidates'
+        os.system('rm {}.fasta')
+        aligned_repeats = chr + '_' + sample + '_repeats.sam'
+        os.system('rm {}'.format(aligned_repeats))
 
-def main(variants, chr_lengths, sample):
+
+def main(variants, chr_lengths, sample, chrs):
     var_out = sample + '_repeats.vcf'
     write_vcf(variants, var_out,chr_lengths ,sample)
+    del_files(sample, chrs)

@@ -3,40 +3,20 @@ import gzip as gz
 import pysam
 import statistics
 
-def de_novo(chr, bam_name, repeat_fasta, sample, readfile):
+def de_novo(chr, bam_name, repeat_fasta, sample, readfile, style):
     print('starting mapping')
     candidate_prefix = chr + '_' + sample + '_candidates'
-    #candidate_bam = 'samtools view -h {} -N {} -b -o {}.bam'.format(bam_name, str(readfile), candidate_prefix)
-    #print(candidate_bam)
-    #os.system(candidate_bam) #save all candidate reads to bam
 
     #extract reads of interest from bam to fasta
     bam_fasta = 'samtools view -h {} -N {} | samtools fasta -s stdout -n - > {}.fasta '.format(bam_name, str(readfile), candidate_prefix)
     print(bam_fasta)
     os.system(bam_fasta) 
 
-    #paf_file = chr + '_' + sample + '_candidate_overlap.paf.gz'
-    #map_self = 'minimap2 -x ava-pb {}.fasta {}.fasta| gzip -1 > {}'.format(candidate_prefix, candidate_prefix, paf_file)
-    #print(map_self)
-    #os.system(map_self) #map reads against themself, creating read overlap 
-
-    #gfa_file = chr + '_' + sample + '_candidate_overlap.gfa'
-    #denovo_assembly = 'miniasm -m 1500 -o 3000 -1 -2 -f {}.fasta {} > {}'.format(candidate_prefix, paf_file, gfa_file)
-    #print(denovo_assembly)
-    #os.system(denovo_assembly) #de novo assembly
-
-    #denovo_fasta = chr + '_' + sample + '_denovo.fasta'
-    #gfa_fasta=  'gfatools gfa2fa {} > {}'.format(gfa_file, denovo_fasta)
-    #print(gfa_fasta)
-    #os.system(gfa_fasta) #gfa to fasta
-
-    #repeat_paffile = sample + '_candidate_repeat_overlap.paf.gz'
-    #map_repeats = 'minimap2 -x ava-pb -c --cs {}  {} | gzip -1 >  {}'.format(denovo_fasta , repeat_fasta, repeat_paffile)
+    
     aligned_repeats = chr + '_' + sample + '_repeats.sam'
-    #map_repeats = 'minimap2 -ax sr {}  {} >  {}'.format(denovo_fasta , repeat_fasta, aligned_repeats)
 
     #map fasta to TE fasta as short read 
-    map_repeats = 'minimap2 -ax map-ont {}  {}.fasta >  {}'.format(repeat_fasta,candidate_prefix, aligned_repeats)
+    map_repeats = 'minimap2 -ax map-{} {}  {}.fasta >  {}'.format(style,repeat_fasta,candidate_prefix, aligned_repeats)
     print(map_repeats)
     os.system(map_repeats) 
     
@@ -78,7 +58,7 @@ def check_cigar(flag, cigar, threshold):
 
     return basesToAdd
 
-def breakpoints(chr, repeat_samfile,  sample, readNameToCluster, clusterToPos, readtopos ,PosToAvoid, readstarts):
+def breakpoints(chr, repeat_samfile,  sample, readNameToCluster, clusterToPos, readtopos ,PosToAvoid, readstarts, max_depth):
     print("finding breakpoints")
     avoid_flags = [2048, 2064]
 
@@ -114,7 +94,9 @@ def breakpoints(chr, repeat_samfile,  sample, readNameToCluster, clusterToPos, r
         cluster = list(readNameToCluster[read])
         for c in cluster:
             cluster_positions= list(clusterToPos[c])
-            clusterconsensus = int(statistics .median(list(cluster_positions)))
+            if len(cluster_positions) > max_depth:
+                continue
+            clusterconsensus = int(statistics.median(list(cluster_positions)))
 
             read_start = readstarts[read]
             
@@ -164,12 +146,12 @@ def pos_toavoid(file): #change to pytabix
     return PosToAvoid
 
 
-def main(chr, bam_name, repeat_fasta, sample, readfile,  readNameToCluster, clusterToPos, read_topos, refrepeat, readstarts):
+def main(chr, bam_name, repeat_fasta, sample, readfile,  readNameToCluster, clusterToPos, read_topos, refrepeat, readstarts, max_depth):
     aligned = de_novo(chr, bam_name, repeat_fasta, sample, readfile)
     #    aligned = chr + '_' + sample + '_repeats.sam' 
     avoid= pos_toavoid(refrepeat)
     #variants = breakpoints(chr, aligned[0], aligned[1], sample, readNameToCluster, clusterToPos, avoid)
-    variants = breakpoints(chr, aligned, sample, readNameToCluster, clusterToPos, read_topos, avoid, readstarts)
+    variants = breakpoints(chr, aligned, sample, readNameToCluster, clusterToPos, read_topos, avoid, readstarts, max_depth)
   
     return variants
 

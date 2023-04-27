@@ -57,15 +57,12 @@ def get_region(bamfile, samples, chr, start, end, cand_list, cand_id_dict, name_
     """
     appended = 0
     for read in bamfile.fetch(chr, start, end, until_eof=True):
-        #chr = chr.strip('chr')
-
-        #print(chr, start, end)
 
         #only check reads that are mapped and with good quality
         if read.is_unmapped or read.is_duplicate or read.is_secondary:
             continue
 
-        elif read.mapping_quality < 10:
+        elif read.mapping_quality < 20:
             continue
         
         #get all split reads in region with support from more than X
@@ -82,14 +79,12 @@ def get_region(bamfile, samples, chr, start, end, cand_list, cand_id_dict, name_
 
         #check for insertions
         insertions = check_cigar(1, cigg, 150) # list w bases to add for each ins OR false
-        #print(cigg, soft_clipping, insertions, read.has_tag('SA'))
  
         #either could be a TE 
-        if read.has_tag('SA') or soft_clipping or insertions :
+        if soft_clipping or insertions :
 
             #find split read position
             #reverse complement - oposite of others?
-            
             
             variants = [soft_clipping, insertions]
             for v in variants:
@@ -116,16 +111,7 @@ def get_region(bamfile, samples, chr, start, end, cand_list, cand_id_dict, name_
                     name_to_pos[read.qname].append(splitpos)
                     appended += 1
 
-            #append chr and pos of supplementary read
-            #SR = read.get_tag('SA').rstrip(';').split(';')
-            #for sa in SR:
-
-                #if sa_chr not in cand_id_dict :
-                #    cand_id_dict[sa_chr] = {}
-                #sa_pos = int(sa.split(',')[1])
-                #cand_list.append([sa_chr, sa_pos])
-                #cand_id_dict[sa_chr][sa_pos] = 
-
+            
         else:
             continue
     #print('total variants', appended)
