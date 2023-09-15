@@ -3,6 +3,11 @@ import gzip as gz
 import pysam
 import statistics
 
+"""
+maps sequence to TE and refines breakpoints
+"""
+
+
 def de_novo(chr, bam_name, repeat_fasta, sample, readfile, style):
     print('starting mapping')
     candidate_prefix = chr + '_' + sample + '_candidates'
@@ -58,7 +63,10 @@ def check_cigar(flag, cigar, threshold):
 
     return basesToAdd
 
-def breakpoints(chr, repeat_samfile,  sample, readNameToCluster, clusterToPos, readtopos ,PosToAvoid, readstarts, max_depth):
+def breakpoints(chr, repeat_samfile,  sample, readNameToCluster, clusterToPos, readtopos ,PosToAvoid, readstarts):
+    """
+    finding breakpoint positions of TE
+    """
     print("finding breakpoints")
     avoid_flags = [2048, 2064]
 
@@ -94,8 +102,7 @@ def breakpoints(chr, repeat_samfile,  sample, readNameToCluster, clusterToPos, r
         cluster = list(readNameToCluster[read])
         for c in cluster:
             cluster_positions= list(clusterToPos[c])
-            if len(cluster_positions) > max_depth:
-                continue
+            
             clusterconsensus = int(statistics.median(list(cluster_positions)))
 
             read_start = readstarts[read]
@@ -131,6 +138,9 @@ def breakpoints(chr, repeat_samfile,  sample, readNameToCluster, clusterToPos, r
 
 
 def pos_toavoid(file): #change to pytabix
+    """
+    poisitions to avoid (known reference TEs) provided by user
+    """
 
     PosToAvoid = {}
     for line in open(file):
@@ -146,12 +156,12 @@ def pos_toavoid(file): #change to pytabix
     return PosToAvoid
 
 
-def main(chr, bam_name, repeat_fasta, sample, readfile,  readNameToCluster, clusterToPos, read_topos, refrepeat, readstarts, max_depth):
-    aligned = de_novo(chr, bam_name, repeat_fasta, sample, readfile)
+def main(chr, bam_name, repeat_fasta, sample, readfile,  readNameToCluster, clusterToPos, read_topos, refrepeat, readstarts, style):
+    aligned = de_novo(chr, bam_name, repeat_fasta, sample, readfile, style)
     #    aligned = chr + '_' + sample + '_repeats.sam' 
     avoid= pos_toavoid(refrepeat)
     #variants = breakpoints(chr, aligned[0], aligned[1], sample, readNameToCluster, clusterToPos, avoid)
-    variants = breakpoints(chr, aligned, sample, readNameToCluster, clusterToPos, read_topos, avoid, readstarts, max_depth)
+    variants = breakpoints(chr, aligned, sample, readNameToCluster, clusterToPos, read_topos, avoid, readstarts)
   
     return variants
 

@@ -1,6 +1,11 @@
 import sys
 import os
 
+"""
+write result to vcf
+"""
+
+
 def write_vcf(variants, filename, chr_lengths, sample):
     file =open(filename, 'w')
     vcfheader = ['##fileformat=VCFv4.1', '##source=TELLRv1',  '##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">',

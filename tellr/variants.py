@@ -51,7 +51,7 @@ def check_cigar(flag, cigar, threshold):
 
     return basesToAdd
 
-def get_region(bamfile, samples, chr, start, end, cand_list, cand_id_dict, name_to_pos, readstarts ):
+def get_region(bamfile, samples, chr, start, end, cand_list, cand_id_dict, name_to_pos, readstarts, mapping_quality):
     """
     extracts split reads from bam file to dictionaries
     """
@@ -62,7 +62,7 @@ def get_region(bamfile, samples, chr, start, end, cand_list, cand_id_dict, name_
         if read.is_unmapped or read.is_duplicate or read.is_secondary:
             continue
 
-        elif read.mapping_quality < 20:
+        elif read.mapping_quality < mapping_quality:
             continue
         
         #get all split reads in region with support from more than X
@@ -120,7 +120,7 @@ def get_region(bamfile, samples, chr, start, end, cand_list, cand_id_dict, name_
 
 
 
-def main(chr, bamfile,bam_name, sample, contigs, contig_length, sr):
+def main(chr, bamfile,bam_name, sample, contigs, contig_length, sr, mapping_quality):
     
     name_to_pos = {} #readname:chr-pos
     candidates = [] #[pos] return for each chromosome
@@ -130,7 +130,7 @@ def main(chr, bamfile,bam_name, sample, contigs, contig_length, sr):
             #candidates[chr] = []
     chr_len = contig_length[chr]
     for bin in range(1, chr_len-1000000, 1000000):
-        get_region(bamfile, sample, chr, bin, bin+1000000, candidates, candidates_toid , name_to_pos, readstarts) #returns candidates (dict with split read and its supplementaries) for clustering
+        get_region(bamfile, sample, chr, bin, bin+1000000, candidates, candidates_toid , name_to_pos, readstarts, mapping_quality) #returns candidates (dict with split read and its supplementaries) for clustering
 
     return candidates, candidates_toid, name_to_pos, readstarts
 

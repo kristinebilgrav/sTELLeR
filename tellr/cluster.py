@@ -5,6 +5,10 @@ import pysam
 import os
 import statistics
 
+"""
+generates clusters of positions with possible TE insertion 
+"""
+
 def cluster(chr, my_array, candidates_wid, read_toextract, bam_name, repeat_fasta, sample, readName_toClusterId, sr): #fix so sample chr can be str
     """
     takes np array and uses DBSCAN to find clusters
@@ -44,7 +48,7 @@ def cluster(chr, my_array, candidates_wid, read_toextract, bam_name, repeat_fast
         if label not in clusterToPos:
             clusterToPos[label] = {}
             clusterToPos[label] = set([])
-        clusterToPos[label].add(array_pos) #add to dict with label:set([pos]) -- change to consesnus position 
+        clusterToPos[label].add(array_pos) #add to dict with label:set([pos]) -- change to consensus position 
 
     for theread in read_toextract:
         reads_txt.write(theread+'\n')
@@ -71,7 +75,10 @@ def cluster(chr, my_array, candidates_wid, read_toextract, bam_name, repeat_fast
 
 
 def plot(db, my_array):
- 
+    """
+    plot all clusters
+    """
+
     labels = db.labels_
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 
