@@ -21,14 +21,14 @@ def main():
     version = "0.0.0"
     parser= argparse.ArgumentParser(
         prog = 'tellr', 
-        description='calls non-reference transposable elements given in xx file in long-read pacbio or ont bam files'
+        description='calls non-reference transposable elements given in bam file with long-read pacbio or ont bam files'
     )
 
     parser.add_argument('-R', '--ref', help='reference genome')
-    parser.add_argument('-t', '--TE_fasta', help='fasta file with elements to be detected', required=True, type=pathlib.Path)
+    parser.add_argument('-tf', '--TE_fasta', help='fasta file with elements to be detected', required=True, type=pathlib.Path)
     parser.add_argument('-b', '--bam', help='bam file', required= True, type=pathlib.Path)
     parser.add_argument('-r', '--sr', help='Minimum number of supporting split reads/insertions to call a variant (default 3)', required= False, default = 3)
-    parser.add_argument('-b', '--TE_ref', help='bed file with positions to avoid', required= True, type=pathlib.Path)
+    parser.add_argument('-tr', '--TE_ref', help='bed file with positions to avoid', required= True, type=pathlib.Path)
     parser.add_argument('-s', '--style', help='ont or pb', required= True, type=pathlib.Path)
     parser.add_argument('-m', '--mq', help='Mapping quality (default 20)', required= False, default = 20)
 
@@ -64,7 +64,7 @@ def main():
     
     #bamfile.close()
 
-    #note down chromosomes and their lenght from the bam file
+    # Note down chromosomes and their lenght from the bam file
     chrs = []
     chr_length = {}
     for contig in bam_header["SQ"]:
@@ -72,7 +72,7 @@ def main():
         chrs.append(thischr)
         chr_length[thischr]=contig["LN"]
     
-    
+
     """
     for each chromosome; find candidates, cluster, align to TE and collect positions
     write to vcf when performed on allp
@@ -89,7 +89,7 @@ def main():
         
         print('calling')
         calls = assembleandcall.main(chr, bam_name, repeat_fasta, sample, clustered[1], clustered[2], clustered[3], candidates[2], repeatsToAvoid, candidates[3], style) 
-        #print('main', calls)
+
         repeatvariants.append(list(calls))
 
     print('writing to file')

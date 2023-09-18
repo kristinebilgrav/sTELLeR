@@ -42,7 +42,7 @@ def del_files(sample,chrs ):
     os.system('rm {}_reads.txt'.format(sample))
     for chr in chrs: 
         candidate_prefix = chr + '_' + sample + '_candidates'
-        os.system('rm {}.fasta')
+        os.system('rm {}.fasta'.format(candidate_prefix))
         aligned_repeats = chr + '_' + sample + '_repeats.sam'
         os.system('rm {}'.format(aligned_repeats))
 
