@@ -50,7 +50,7 @@ def check_cigar(flag, cigar, threshold):
 
     return basesToAdd
 
-def get_region(bamfile, samples, chr, start, end, cand_list, cand_id_dict, name_to_pos, readstarts, mapping_quality):
+def get_region(bamfile, chr, start, end, cand_list, cand_id_dict,  readstarts, mapping_quality, haploinfo, ReadToVarPos):
     """
     Runs through bam file and extracts positions of split reads and insertions in primary reads with mapping quality > user implied quality
     """
@@ -63,15 +63,26 @@ def get_region(bamfile, samples, chr, start, end, cand_list, cand_id_dict, name_
 
         elif read.mapping_quality < mapping_quality: # Mapping quality according to user set quality
             continue
-        
-     
-        cigg = read.cigar # Cigar: [ (1,24),(7,133) ]
-        read_start_pos = read.pos #Read Start
+
+        # Retrive HP tag for phasing/genotyping
+        if read.qname not in haploinfo:
+            haploinfo[read.qname] = 0
+        try:
+            haplotype = read.get_tag('HP') 
+            haploinfo[read.qname] = haplotype
+        except:
+            haploinfo[read.qname] = 0
+
+        cigg = read.cigar # Cigar: [ (1,24),(7,133) ]§
+        read_start_pos = read.pos # Read Start
 
         # Keep track of which reads that are read
         if read.qname not in readstarts :
             readstarts[read.qname] = read_start_pos
         
+        
+
+
 
         # Explain_cigar = 0: matching, 1:insertion, 2:deletion, 3:ref_skip, 4:soft_clipped, 5:hard_clipped, 6:...
         # Check for soft clipped 
@@ -103,30 +114,29 @@ def get_region(bamfile, samples, chr, start, end, cand_list, cand_id_dict, name_
                     cand_id_dict[varpos].append(read.qname)
 
                     # Add name to dict with readname:pos
-                    if read.qname not in name_to_pos:
-                        name_to_pos[read.qname] = []
-                    name_to_pos[read.qname].append(varpos)
-                    appended += 1
+                    if read.qname not in ReadToVarPos:
+                        ReadToVarPos[read.qname] = []
+                    ReadToVarPos[read.qname].append(varpos)
 
+                    appended += 1
             
         else:
             continue
 
-    return cand_list, cand_id_dict, name_to_pos, readstarts
+    return cand_list, cand_id_dict, readstarts, haploinfo, ReadToVarPos
  
 
 
-
-def main(chr, bamfile,bam_name, sample, contigs, contig_length, sr, mapping_quality):
-    
-    name_to_pos = {} # Readname:chr-pos
+def main(chr, bamfile, contig_length, mapping_quality):
+    ReadToVarPos={}
     candidates = [] # [pos] return for each chromosome
     candidates_toid = {} # chr:{pos:[readname(s)]}
     readstarts = {} # read:start
+    haplotags = {} # readname : 1/2
 
     chr_len = contig_length[chr]
     for bin in range(1, chr_len-1000000, 1000000):
-        get_region(bamfile, sample, chr, bin, bin+1000000, candidates, candidates_toid , name_to_pos, readstarts, mapping_quality) # Returns candidates (dict with split read and its supplementaries) for clustering
+        get_region(bamfile, chr, bin, bin+1000000, candidates, candidates_toid , readstarts, mapping_quality, haplotags,ReadToVarPos ) # Returns candidates (dict with split read and its supplementaries) for clustering
 
-    return candidates, candidates_toid, name_to_pos, readstarts
+    return candidates, candidates_toid,  readstarts, haplotags, ReadToVarPos
 

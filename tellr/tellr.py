@@ -3,7 +3,6 @@ import argparse
 import pathlib
 import os
 import pysam
-import vcf_header as tellr_vcf_header 
 import variants as tellr_call_vars
 import cluster as tellr_cluster_vars
 import assemble_calls as assembleandcall
@@ -21,15 +20,15 @@ def main():
     version = "0.0.0"
     parser= argparse.ArgumentParser(
         prog = 'tellr', 
-        description='calls non-reference transposable elements given in bam file with long-read pacbio or ont bam files'
+        description='calls non-reference transposable elements given in a long-read pacbio or ont bam file'
     )
 
     parser.add_argument('-R', '--ref', help='reference genome')
     parser.add_argument('-tf', '--TE_fasta', help='fasta file with elements to be detected', required=True, type=pathlib.Path)
     parser.add_argument('-b', '--bam', help='bam file', required= True, type=pathlib.Path)
-    parser.add_argument('-r', '--sr', help='Minimum number of supporting split reads/insertions to call a variant (default 3)', required= False, default = 3)
     parser.add_argument('-tr', '--TE_ref', help='bed file with positions to avoid', required= True, type=pathlib.Path)
     parser.add_argument('-s', '--style', help='ont or pb', required= True, type=pathlib.Path)
+    parser.add_argument('-r', '--sr', help='Minimum number of supporting split reads/insertions to call a variant (default 3)', required= False, default = 3)
     parser.add_argument('-m', '--mq', help='Mapping quality (default 20)', required= False, default = 20)
 
     args = parser.parse_args()
@@ -80,16 +79,24 @@ def main():
     repeatvariants =[]
     for chr in chrs:
         print('finding candidates on', chr)        
-        candidates = tellr_call_vars.main(chr, bamfile,bam_name, sample, chrs, chr_length, sr, mapping_quality) 
+        candidates = tellr_call_vars.main(chr, bamfile, chr_length, mapping_quality) 
+        chr_candidates = candidates[0]
+        candidates_toid = candidates[1]
+        ReadStarts=candidates[2]
+        HaploTags = candidates[3]
+        ReadToVarPos = candidates[4]
 
         print('clustering')
-        clustered = tellr_cluster_vars.main(chr, candidates[0], candidates[1], bamfile, sample, bam_name, sr, repeat_fasta )
-        if clustered == False:
+        clustered = tellr_cluster_vars.main(chr, chr_candidates, candidates_toid, bamfile, sample, bam_name, sr, repeat_fasta )
+        if clustered == False: 
             continue
-        
-        print('calling')
-        calls = assembleandcall.main(chr, bam_name, repeat_fasta, sample, clustered[1], clustered[2], clustered[3], candidates[2], repeatsToAvoid, candidates[3], style) 
 
+        readtxtfile=clustered[1]
+        clusterToPos=clustered[3]
+        clusterToRead=clustered[2]
+
+        print('calling')
+        calls = assembleandcall.main(chr, bam_name, repeat_fasta, sample, readtxtfile, clusterToPos, clusterToRead, repeatsToAvoid, style, HaploTags, ReadStarts, ReadToVarPos) 
         repeatvariants.append(list(calls))
 
     print('writing to file')
