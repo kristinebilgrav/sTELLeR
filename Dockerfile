@@ -1,4 +1,5 @@
 FROM ubuntu:20.04
+#--platform linux/x86_64
 
 RUN apt-get update && apt-get install -y  python3-pip python3-dev build-essential git zlib1g-dev perl gcc make libdbi-perl wget
 RUN pip3 install --upgrade pip
@@ -22,4 +23,4 @@ RUN conda install -c bioconda samtools=1.16 pysam
 
 RUN git clone https://github.com/kristinebilgrav/TELLR.git
 RUN cd TELLR/
-ENV PATH="/TELLR/:$PATH"
+ENV PATH="TELLR/:$PATH"

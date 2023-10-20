@@ -229,8 +229,8 @@ def te_breakpoints(clusterToRead, readToTEtype, readToTEPos, clusterToPos , chr,
                 if v in cluster_positions:
                     for t in tes:
                         if t not in thisclusterTEs:
-                            thisclusterTEs[t]=[]
-                        thisclusterTEs[t].append(ht)
+                            thisclusterTEs[str(t)]=[]
+                        thisclusterTEs[str(t)].append(str(ht))
 
                     # Check that TE alignes with split reads and insertions
                     #pos_matches= [i for i in range(tepos-100, tepos+100) if i  in cluster_positions]
@@ -271,7 +271,7 @@ def te_breakpoints(clusterToRead, readToTEtype, readToTEPos, clusterToPos , chr,
 def main(chr, bam_name, repeat_fasta, sample, readfile, clusterToPos, clusterToRead, refrepeat, style, haplotags, ReadStarts, ReadToVarPos):
     aligned = de_novo(chr, bam_name, repeat_fasta, sample, readfile, style)
     #    aligned = chr + '_' + sample + '_repeats.sam' 
-    avoid= pos_toavoid(refrepeat)
+    #xavoid= pos_toavoid(refrepeat)
     #variants = breakpoints(chr, aligned[0], aligned[1], sample, readNameToCluster, clusterToPos, avoid)
     #variants = breakpoints(chr, aligned, sample, readNameToCluster, clusterToPos, read_topos, avoid, readstarts)
     tes=extract_TEs(aligned)
