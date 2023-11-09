@@ -26,7 +26,7 @@ def main():
     parser.add_argument('-R', '--ref', help='reference genome')
     parser.add_argument('-tf', '--TE_fasta', help='fasta file with elements to be detected', required=True, type=pathlib.Path)
     parser.add_argument('-b', '--bam', help='bam file', required= True, type=pathlib.Path)
-    parser.add_argument('-tr', '--TE_ref', help='bed file with positions to avoid', required= True, type=pathlib.Path)
+    parser.add_argument('-tr', '--TE_ref', help='bed file with positions to avoid', required= False, type=pathlib.Path)
     parser.add_argument('-s', '--style', help='ont or pb', required= True, type=pathlib.Path)
     parser.add_argument('-r', '--sr', help='Minimum number of supporting split reads/insertions to call a variant (default 3)', required= False, default = 3)
     parser.add_argument('-m', '--mq', help='Mapping quality (default 20)', required= False, default = 20)
@@ -40,8 +40,8 @@ def main():
         print('Error, cannot find bam file')
         quit()
     
-    elif not os.path.isfile(args.TE_ref) :
-        print('Error, cannot find TE reference file')
+    elif not os.path.isfile(args.TE_fasta) :
+        print('Error, cannot find TE fasta file')
         quit()
 
     else:
@@ -54,7 +54,10 @@ def main():
     sr = int(args.sr)
     mapping_quality = int(args.mq)
     style = args.style
-    repeatsToAvoid = args.TE_ref
+    if os.path.isfile(args.TE_ref):
+        repeatsToAvoid = args.TE_ref
+    else: 
+        repeatsToAvoid =False
     bam_name = str(args.bam)
     bamfile = pysam.AlignmentFile(bam_name, "rb", reference_filename = args.ref)
     bam_header= bamfile.header

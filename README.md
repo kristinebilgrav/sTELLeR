@@ -5,7 +5,7 @@ non-reference transposable element calling on long-read data
 # Run
 require python3, pysam, samtools, minimap2 and miniasm
 
-    python tellr [-h] [-R REF] -tf TE_FASTA -b BAM [-r SR] -tr TE_REF -s STYLE [-m MQ]
+    python tellr/tellr.py [-h] [-R REF] -tf TE_FASTA -b BAM [-r SR] -tr TE_REF -s STYLE [-m MQ]
 
   arguments: 
 
@@ -16,8 +16,7 @@ require python3, pysam, samtools, minimap2 and miniasm
 
     -b BAM, --bam BAM   bam file
 
-    -tr TE_REF, --TE_ref TE_REF
-                        bed file with positions to avoid
+
 
     -s STYLE, --style STYLE
                         ont or pb
@@ -25,6 +24,9 @@ require python3, pysam, samtools, minimap2 and miniasm
   optional: 
 
     -sr SR, --sr SR       Minimum number of supporting split reads to call a variant (default 3)
+
+     -tr TE_REF, --TE_ref TE_REF
+                          bed file with positions to avoid
     
     -maxsr
 

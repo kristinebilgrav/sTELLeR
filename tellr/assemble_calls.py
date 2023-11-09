@@ -63,82 +63,6 @@ def check_cigar(flag, cigar, threshold):
 
     return basesToAdd
 
-def breakpoints(chr, repeat_samfile,  sample, readNameToCluster, clusterToPos, readtopos ,PosToAvoid, readstarts):
-    """
-    finding breakpoint positions of TE
-    Going through alignment file; extracting TE, length
-    Going through alignment file; check alignment quality, extract read name, position and te pos
-    """
-    print("finding breakpoints")
-    avoid_flags = [2048, 2064]
-
-    repeat_vars = []
-    #for line in open(repeat_samfile):
-    samfile = pysam.AlignmentFile(repeat_samfile, 'r')
-    samfile_header = samfile.header
-    TEs = {}
-    for te in samfile_header["SQ"]:
-        thete = te["SN"]
-        length = te["LN"]
-        TEs[thete] = length
-    
-    for line in samfile.fetch():
-
-        flag = line.flag
-        if flag in avoid_flags:
-            continue
-
-        read = line.qname
-        r_start = line.pos 
-        repeat = line.reference_name
-        if repeat not in TEs:
-            continue
-        #print(read, repeat)
-        #connect start position in contig with position in read 
-        cigar = line.cigar
-        to_add = check_cigar(0, cigar, 100 )
-        
-        
-        #find position in this read: read start + start of repeat
-
-        cluster = list(readNameToCluster[read]) # Clusters where the read is involved in
-
-        # Go through each cluster
-        for c in cluster:
-            cluster_positions= list(clusterToPos[c]) # List of all positions in one cluster
-            
-            clusterconsensus = int(statistics.median(list(cluster_positions))) # Get middle position
-
-            read_start = readstarts[read] # Ref pos of where read starts
-
-            repeat_start = readtopos[read] # Ref pos of where repeat starts
-
-
-            for r in repeat_start:
-                pos_matches= [i for i in range(r-100, r+100) if i  in cluster_positions]
-                if len(pos_matches) < 1:
-                    #print('skip', read, repeat, r, pos_matches)
-                    continue             
-                    
-                # Check that its not a reference TE
-                if chr in PosToAvoid:
-                    start_positions = PosToAvoid[chr]
-                    skip = [p for p in range(clusterconsensus-100, clusterconsensus+100) if p in start_positions ]#
-                    if len(skip) > 0:
-                        continue
-                
-                #print(c, cluster_positions, clusterconsensus)
-
-                #print('read starts at', readstarts[read])
-                #print('read split', readtopos[read])
-                #print(read, flag, repeat, start, cluster, chr, clusterconsensus)
-                lst = [repeat, chr, str(clusterconsensus), str(clusterconsensus + int(TEs[repeat])) ]
-                #print(lst)
-                if lst not in repeat_vars:
-                    repeat_vars.append(lst)
-    #print(repeat_vars)
-    return repeat_vars
-
 
 def pos_toavoid(file): #change to pytabix
     """
@@ -271,9 +195,9 @@ def te_breakpoints(clusterToRead, readToTEtype, readToTEPos, clusterToPos , chr,
 def main(chr, bam_name, repeat_fasta, sample, readfile, clusterToPos, clusterToRead, refrepeat, style, haplotags, ReadStarts, ReadToVarPos):
     aligned = de_novo(chr, bam_name, repeat_fasta, sample, readfile, style)
     #    aligned = chr + '_' + sample + '_repeats.sam' 
-    #xavoid= pos_toavoid(refrepeat)
-    #variants = breakpoints(chr, aligned[0], aligned[1], sample, readNameToCluster, clusterToPos, avoid)
-    #variants = breakpoints(chr, aligned, sample, readNameToCluster, clusterToPos, read_topos, avoid, readstarts)
+    if refrepeat:
+        avoid= pos_toavoid(refrepeat)
+
     tes=extract_TEs(aligned)
     readToTEtype =tes[0]
     readToTEPos = tes[1] 
