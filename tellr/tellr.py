@@ -55,7 +55,7 @@ def main():
     mapping_quality = int(args.mq)
     style = args.style
     if args.TE_ref:
-        repeatsToAvoid = args.TE_ref
+        repeatsToAvoid = True
     else: 
         repeatsToAvoid = False
     bam_name = str(args.bam)

@@ -195,8 +195,8 @@ def te_breakpoints(clusterToRead, readToTEtype, readToTEPos, clusterToPos , chr,
 def main(chr, bam_name, repeat_fasta, sample, readfile, clusterToPos, clusterToRead, refrepeat, style, haplotags, ReadStarts, ReadToVarPos):
     aligned = de_novo(chr, bam_name, repeat_fasta, sample, readfile, style)
     #    aligned = chr + '_' + sample + '_repeats.sam' 
-    if refrepeat:
-        avoid= pos_toavoid(refrepeat)
+    #if refrepeat:
+    #    avoid= pos_toavoid()
 
     tes=extract_TEs(aligned)
     readToTEtype =tes[0]
