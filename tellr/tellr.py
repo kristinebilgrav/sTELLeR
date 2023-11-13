@@ -54,14 +54,14 @@ def main():
     sr = int(args.sr)
     mapping_quality = int(args.mq)
     style = args.style
-    if args.TE_ref:
-        repeatsToAvoid = True
-    else: 
+    if not os.path.isfile(args.TE_ref) :
         repeatsToAvoid = False
+    else:
+        repeatsToAvoid = True
     bam_name = str(args.bam)
     bamfile = pysam.AlignmentFile(bam_name, "rb", reference_filename = args.ref)
     bam_header= bamfile.header
-    sample_id=bam_name.split("/")[-1].split(".")[0]
+    sample_id=bam_name.split("/")[-1].split(".bam")[0]
     sample=sample_id
     
     #bamfile.close()

@@ -26,7 +26,7 @@ RUN conda config --add channels conda-forge
 
 RUN conda install -c conda-forge matplotlib
 RUN conda install -c anaconda scikit-learn numpy
-RUN conda install -c bioconda samtools=1.16 pysam
+RUN conda install -c bioconda samtools=1.16 pysam minimap2
 
 RUN git clone https://github.com/kristinebilgrav/TELLR.git
 RUN cd TELLR/
