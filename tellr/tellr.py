@@ -1,4 +1,4 @@
-import sys
+from multiprocessing import Pool
 import argparse
 import pathlib
 import os
@@ -30,6 +30,8 @@ def main():
     parser.add_argument('-s', '--style', help='ont or pb', required= True, type=pathlib.Path)
     parser.add_argument('-r', '--sr', help='Minimum number of supporting split reads/insertions to call a variant (default 3)', required= False, default = 3)
     parser.add_argument('-m', '--mq', help='Mapping quality (default 20)', required= False, default = 20)
+    parser.add_argument('-k', '--keep_intermediates', help='Keep intermediate files', required= False, action="store_false")
+    parser.add_argument('-o', '--output', help='Output file name', required= False)
 
     args = parser.parse_args()
 
@@ -54,15 +56,25 @@ def main():
     sr = int(args.sr)
     mapping_quality = int(args.mq)
     style = args.style
-    if not os.path.isfile(args.TE_ref) :
-        repeatsToAvoid = False
-    else:
-        repeatsToAvoid = True
     bam_name = str(args.bam)
     bamfile = pysam.AlignmentFile(bam_name, "rb", reference_filename = args.ref)
     bam_header= bamfile.header
-    sample_id=bam_name.split("/")[-1].split(".bam")[0]
+
+    if args.output:
+        sample_id=args.output
+    else:
+        sample_id=bam_name.split("/")[-1].split(".bam")[0]
     sample=sample_id
+
+    if args.TE_ref is None :
+        repeatsToAvoid = False
+    else:
+        repeatsToAvoid = args.TE_ref
+    
+
+    delete= args.keep_intermediates
+
+    
     
     #bamfile.close()
 
@@ -80,6 +92,7 @@ def main():
     write to vcf when performed on allp
     """
     repeatvariants =[]
+
     for chr in chrs:
         print('finding candidates on', chr)        
         candidates = tellr_call_vars.main(chr, bamfile, chr_length, mapping_quality) 
@@ -103,7 +116,7 @@ def main():
         repeatvariants.append(list(calls))
 
     print('writing to file')
-    write_calls.main(repeatvariants, chr_length, sample, chrs)
+    write_calls.main(repeatvariants, chr_length, sample, chrs, delete)
 
 
 if __name__ == '__main__':

@@ -81,9 +81,6 @@ def get_region(bamfile, chr, start, end, cand_list, cand_id_dict,  readstarts, m
             readstarts[read.qname] = read_start_pos
         
         
-
-
-
         # Explain_cigar = 0: matching, 1:insertion, 2:deletion, 3:ref_skip, 4:soft_clipped, 5:hard_clipped, 6:...
         # Check for soft clipped 
         soft_clipping = check_cigar(4, cigg, 150) #list w bases to add for each soft clip OR false

@@ -87,7 +87,7 @@ def extract_TEs(repeat_samfile):
     readToTEtype={} # Save readname and TE class
     readToTEPos={} # Save readname and position of identified TE
 
-    avoid_flags = [2048, 2064]
+    avoid_flags = [2048, 2064, 256]
 
     samfile = pysam.AlignmentFile(repeat_samfile, 'r')
     samfile_header = samfile.header
@@ -103,7 +103,10 @@ def extract_TEs(repeat_samfile):
         flag = line.flag
         if flag in avoid_flags:
             continue
-
+        if line.mapping_quality < 20:
+            continue
+        if line.is_unmapped or line.is_duplicate or line.is_secondary:
+            continue
         read = line.qname # Readname
         r_start = line.pos # Get position of repeat in read - for crossreference with breakpoints
         repeat = line.reference_name # Repeat type
@@ -195,8 +198,8 @@ def te_breakpoints(clusterToRead, readToTEtype, readToTEPos, clusterToPos , chr,
 def main(chr, bam_name, repeat_fasta, sample, readfile, clusterToPos, clusterToRead, refrepeat, style, haplotags, ReadStarts, ReadToVarPos):
     aligned = de_novo(chr, bam_name, repeat_fasta, sample, readfile, style)
     #    aligned = chr + '_' + sample + '_repeats.sam' 
-    #if refrepeat:
-    #    avoid= pos_toavoid()
+    if os.path.isfile(refrepeat):
+        avoid= pos_toavoid(refrepeat)
 
     tes=extract_TEs(aligned)
     readToTEtype =tes[0]

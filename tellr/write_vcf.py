@@ -50,7 +50,8 @@ def del_files(sample,chrs ):
         os.system('rm {}'.format(aligned_repeats))
 
 
-def main(variants, chr_lengths, sample, chrs):
+def main(variants, chr_lengths, sample, chrs, delete):
     var_out = sample + '_repeats.vcf'
     write_vcf(variants, var_out,chr_lengths ,sample)
-    del_files(sample, chrs)
+    if delete:
+        del_files(sample, chrs)
