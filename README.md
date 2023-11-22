@@ -13,7 +13,7 @@ require python3, pysam, samtools, minimap2 and miniasm
     -tf, --TE_fasta   fasta file with sequence of elements to be detected
                           
     -b, --bam         bam file
-    -tr, --TE_ref     bed file with positions to avoid
+    -ta, --TE_avoid     bed file with positions to avoid
                          
     -s , --style      ont or pb 
                           

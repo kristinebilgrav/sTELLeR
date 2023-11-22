@@ -16,7 +16,7 @@ def check_cigar(flag, cigar, threshold):
     the flag (type of var) is positioned
     threshold: needs to be at least threshold amount of soft clipped / inserted bases
     """
-    basesToAdd=[]
+    basesToAdd={}
 
     num_flags = len([tup for tup in cigar if tup[0] == flag and tup[1] > threshold]) # For each pair (flag,bases) in cigar checks 0: flag and 1:bases to see if desired flag and >threshold
 
@@ -36,21 +36,25 @@ def check_cigar(flag, cigar, threshold):
                 add += c[1]
                 continue
 
-            elif c[1] > threshold: # Threshold 
-                
+            elif int(c[1]) > threshold: # Threshold                 
                 num_rounds.append(c)
             
-                basesToAdd.append(add)
+                if add not in basesToAdd:
+                    basesToAdd[add]=[]
+                    basesToAdd[add].append(c[1])
+                else:
+                    basesToAdd[add].append(c[1])
+
                 if len(num_rounds) == num_flags:
                     return basesToAdd
             else:
-                if c[0]!= 1: # Dont want to add bases for insertions 
+                if c[0]!= 1: # Dont want to add bases for insertions as output is reference base
                     add += c[1]
                 continue
 
     return basesToAdd
 
-def get_region(bamfile, chr, start, end, cand_list, cand_id_dict,  readstarts, mapping_quality, haploinfo, ReadToVarPos):
+def get_region(bamfile, chr, start, end, cand_list, cand_id_dict, cand_start_end, readstarts, mapping_quality, haploinfo, ReadToVarPos):
     """
     Runs through bam file and extracts positions of split reads and insertions in primary reads with mapping quality > user implied quality
     """
@@ -101,6 +105,7 @@ def get_region(bamfile, chr, start, end, cand_list, cand_id_dict,  readstarts, m
                 for add in v:
                 
                     varpos = read_start_pos + add
+                    varpos_end=varpos + max(v[add]) 
 
                     # Add to list for clustering
                     cand_list.append(varpos)
@@ -109,6 +114,11 @@ def get_region(bamfile, chr, start, end, cand_list, cand_id_dict,  readstarts, m
                     if varpos not in cand_id_dict:
                         cand_id_dict[varpos] = []
                     cand_id_dict[varpos].append(read.qname)
+
+                    # Save Length of variant
+                    if varpos not in cand_start_end:
+                        cand_start_end[varpos] =[]
+                    cand_start_end[varpos].append(varpos_end)
 
                     # Add name to dict with readname:pos
                     if read.qname not in ReadToVarPos:
@@ -120,7 +130,7 @@ def get_region(bamfile, chr, start, end, cand_list, cand_id_dict,  readstarts, m
         else:
             continue
 
-    return cand_list, cand_id_dict, readstarts, haploinfo, ReadToVarPos
+    return cand_list, cand_id_dict, cand_start_end, readstarts, haploinfo, ReadToVarPos
  
 
 
@@ -128,12 +138,13 @@ def main(chr, bamfile, contig_length, mapping_quality):
     ReadToVarPos={}
     candidates = [] # [pos] return for each chromosome
     candidates_toid = {} # chr:{pos:[readname(s)]}
+    cand_start_end = {} # Start and end of insert/split
     readstarts = {} # read:start
     haplotags = {} # readname : 1/2
 
     chr_len = contig_length[chr]
     for bin in range(1, chr_len-1000000, 1000000):
-        get_region(bamfile, chr, bin, bin+1000000, candidates, candidates_toid , readstarts, mapping_quality, haplotags,ReadToVarPos ) # Returns candidates (dict with split read and its supplementaries) for clustering
+        get_region(bamfile, chr, bin, bin+1000000, candidates, candidates_toid , cand_start_end, readstarts, mapping_quality, haplotags,ReadToVarPos ) # Returns candidates (dict with split read and its supplementaries) for clustering
 
-    return candidates, candidates_toid,  readstarts, haplotags, ReadToVarPos
+    return candidates, candidates_toid, cand_start_end, readstarts, haplotags, ReadToVarPos
 

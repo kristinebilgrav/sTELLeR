@@ -8,19 +8,19 @@ maps sequence to TE and refines breakpoints
 """
 
 
-def de_novo(chr, bam_name, repeat_fasta, sample, readfile, style):
+def align(chr, bam_name, repeat_fasta, sample, readfile, style):
     print('starting mapping')
     candidate_prefix = chr + '_' + sample + '_candidates'
-
+    regionfile= chr + '_' + sample + '_regions.txt'
     #extract reads of interest from bam to fasta
-    bam_fasta = 'samtools view -h {} -N {} | samtools fasta -s stdout -n - > {}.fasta '.format(bam_name, str(readfile), candidate_prefix)
+    bam_fasta = 'samtools view -h {} -N {} --region-file {} | samtools fasta -s stdout -n - > {}.fasta '.format(bam_name, str(readfile), regionfile ,candidate_prefix)
     print(bam_fasta)
     os.system(bam_fasta) 
 
     
     aligned_repeats = chr + '_' + sample + '_repeats.sam'
 
-    #map fasta to TE fasta as short read 
+    #map candidate-fasta to TE-fasta 
     map_repeats = 'minimap2 -ax map-{} {}  {}.fasta >  {}'.format(style,repeat_fasta,candidate_prefix, aligned_repeats)
     print(map_repeats)
     os.system(map_repeats) 
@@ -196,7 +196,7 @@ def te_breakpoints(clusterToRead, readToTEtype, readToTEPos, clusterToPos , chr,
 
 
 def main(chr, bam_name, repeat_fasta, sample, readfile, clusterToPos, clusterToRead, refrepeat, style, haplotags, ReadStarts, ReadToVarPos):
-    aligned = de_novo(chr, bam_name, repeat_fasta, sample, readfile, style)
+    aligned = align(chr, bam_name, repeat_fasta, sample, readfile, style)
     #    aligned = chr + '_' + sample + '_repeats.sam' 
     if os.path.isfile(refrepeat):
         avoid= pos_toavoid(refrepeat)

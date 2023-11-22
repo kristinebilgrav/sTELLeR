@@ -26,9 +26,10 @@ def main():
     parser.add_argument('-R', '--ref', help='reference genome')
     parser.add_argument('-tf', '--TE_fasta', help='fasta file with elements to be detected', required=True, type=pathlib.Path)
     parser.add_argument('-b', '--bam', help='bam file', required= True, type=pathlib.Path)
-    parser.add_argument('-tr', '--TE_ref', help='bed file with positions to avoid', required= False, type=pathlib.Path)
+    parser.add_argument('-ta', '--TE_avoid', help='bed file with positions to avoid', required= False, type=pathlib.Path)
     parser.add_argument('-s', '--style', help='ont or pb', required= True, type=pathlib.Path)
     parser.add_argument('-r', '--sr', help='Minimum number of supporting split reads/insertions to call a variant (default 3)', required= False, default = 3)
+    parser.add_argument('-mr', '--maxreads', help='Maximum number of supporting split reads/insertions to call a variant (default 100)', required= False, default = 100)
     parser.add_argument('-m', '--mq', help='Mapping quality (default 20)', required= False, default = 20)
     parser.add_argument('-k', '--keep_intermediates', help='Keep intermediate files', required= False, action="store_false")
     parser.add_argument('-o', '--output', help='Output file name', required= False)
@@ -54,6 +55,7 @@ def main():
     """
     repeat_fasta = args.TE_fasta
     sr = int(args.sr)
+    mr = int(args.maxreads)
     mapping_quality = int(args.mq)
     style = args.style
     bam_name = str(args.bam)
@@ -66,10 +68,10 @@ def main():
         sample_id=bam_name.split("/")[-1].split(".bam")[0]
     sample=sample_id
 
-    if args.TE_ref is None :
+    if args.TE_avoid is None :
         repeatsToAvoid = False
     else:
-        repeatsToAvoid = args.TE_ref
+        repeatsToAvoid = args.TE_avoid
     
 
     delete= args.keep_intermediates
@@ -98,12 +100,13 @@ def main():
         candidates = tellr_call_vars.main(chr, bamfile, chr_length, mapping_quality) 
         chr_candidates = candidates[0]
         candidates_toid = candidates[1]
-        ReadStarts=candidates[2]
-        HaploTags = candidates[3]
-        ReadToVarPos = candidates[4]
+        cand_start_end = candidates[2]
+        ReadStarts=candidates[3]
+        HaploTags = candidates[4]
+        ReadToVarPos = candidates[5]
 
         print('clustering')
-        clustered = tellr_cluster_vars.main(chr, chr_candidates, candidates_toid, bamfile, sample, bam_name, sr, repeat_fasta )
+        clustered = tellr_cluster_vars.main(chr, chr_candidates, candidates_toid, cand_start_end, sample, sr, mr, repeat_fasta )
         if clustered == False: 
             continue
 

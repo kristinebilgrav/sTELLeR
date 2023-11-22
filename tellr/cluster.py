@@ -9,14 +9,14 @@ import statistics
 generates clusters of positions with possible TE insertion 
 """
 
-def cluster(chr, my_array, candidates_wid, read_toextract, repeat_fasta, sample, readName_toClusterId, sr): #fix so sample chr can be str
+def cluster(chr, my_array, candidates_wid, cand_start_end,read_toextract, repeat_fasta, sample, readName_toClusterId, sr, mr): #fix so sample chr can be str
     """
     takes np array and uses DBSCAN to find clusters
     of positions that can be intersting (min_samples according to sr threshold) 
     distance between clusters: eps 100
     """
     try:
-        db = DBSCAN(eps = 100, min_samples= sr).fit(my_array)
+        db = DBSCAN(eps = 150, min_samples= sr).fit(my_array)
         labels = db.labels_ #[0, -1, .....ncluster]
         n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
         print('clusters' , n_clusters_)
@@ -25,11 +25,17 @@ def cluster(chr, my_array, candidates_wid, read_toextract, repeat_fasta, sample,
     except:
         print('no clusters found')
         return False
-  
+    
+    # Remove noise
+    print('array length:',len(my_array))
+    print('labels len', len(labels))
 
-    # Get reads of clustered positions
+    # Get reads of clustered positions and the regions to extract
     txt_name = sample + '_reads.txt'
     reads_txt = open(txt_name, 'w')
+    regions_txt=open(chr + '_' + sample + '_regions.txt', 'w')
+    allregions=[]
+
     clusterToPos = {}
     clusterToRead ={}
     for i in range(0, len(my_array)): # Map array to cluster
@@ -37,6 +43,15 @@ def cluster(chr, my_array, candidates_wid, read_toextract, repeat_fasta, sample,
         if int(label) < 0: # Skip clusters labeled -1
             continue 
         array_pos = list(my_array[i])[0]
+
+        # Regions
+        s= array_pos-100
+        e=max(cand_start_end[array_pos])+100
+        region= [str(chr), str(s), str(e)]
+        if region not in allregions:
+            allregions.append(region)
+            regions_txt.write('\t'.join(region)+'\n')
+        
 
         # Find read name of position included in the cluster
         read_ids = set(candidates_wid[array_pos])
@@ -52,14 +67,13 @@ def cluster(chr, my_array, candidates_wid, read_toextract, repeat_fasta, sample,
 
         if label not in clusterToPos:
             clusterToPos[label] = {}
-            clusterToPos[label] = set([])
-        clusterToPos[label].add(array_pos) #add to dict with label:set([pos]) -- change to consensus position 
+            clusterToPos[label] = []
+        clusterToPos[label].append(array_pos) #add to dict with label:set([pos]) -- change to consensus position 
 
     for theread in read_toextract:
         reads_txt.write(theread+'\n')
 
     
-
     return db, txt_name, clusterToRead, clusterToPos
     #return text file to use in samtools, read names to clusters and clusters with the positions it contained. Can be used to map readname back to cluster and the respective postion of the split read
 
@@ -110,13 +124,13 @@ def plot(db, my_array):
 
 
 
-def main(chr, candidates, candidates_id, bamfile, sample, bam_name, sr, repeat_fasta):
+def main(chr, candidates, candidates_id,cand_start_end, sample, sr, mr, repeat_fasta):
     read_names = set([])
     #clusterPosToReadName = {}
     readName_toClusterId = {}
     cand_array = np.array(candidates, dtype=object).reshape(-1, 1)
     #print(cand_array)
-    myclusters = cluster(chr, cand_array, candidates_id, read_names, repeat_fasta, sample, readName_toClusterId, sr)
+    myclusters = cluster(chr, cand_array, candidates_id, cand_start_end, read_names, repeat_fasta, sample, readName_toClusterId, sr, mr)
     #db, txt_name, readName_toClusterId, clusterToRead / 1, 2, 4
 
 

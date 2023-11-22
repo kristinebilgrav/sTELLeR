@@ -43,6 +43,7 @@ def write_vcf(variants, filename, chr_lengths, sample):
 
 def del_files(sample,chrs ):
     os.system('rm {}_reads.txt'.format(sample))
+    os.system('rm *{}_regions.txt'.format(sample))
     for chr in chrs: 
         candidate_prefix = chr + '_' + sample + '_candidates'
         os.system('rm {}.fasta'.format(candidate_prefix))
