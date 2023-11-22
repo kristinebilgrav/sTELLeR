@@ -5,29 +5,31 @@ non-reference transposable element calling on long-read data
 # Run
 require python3, pysam, samtools, minimap2 and miniasm
 
-    python tellr/tellr.py [-h] [-R REF] -tf TE_FASTA -b BAM [-r SR] -tr TE_REF -s STYLE [-m MQ]
+  python tellr/tellr.py [-h] [-R REF] -tf TE_FASTA -b BAM [-tr TE_REF] -s STYLE [-r SR] [-m MQ] [-k] [-o OUTPUT]
 
-  arguments: 
+  arguments:
 
-    -R REF, --ref REF   reference genome
+    -R REF, --ref     reference genome
+    -tf, --TE_fasta   fasta file with sequence of elements to be detected
+                          
+    -b, --bam         bam file
+    -tr, --TE_ref     bed file with positions to avoid
+                         
+    -s , --style      ont or pb 
+                          
+    -r , --sr         Minimum number of supporting split reads/insertions to call a variant (default 3)
+    -m , --mq         Mapping quality (default 20)
 
-    -tf TE_FASTA, --TE_fasta TE_FASTA
-                        fasta file with elements to be detected
 
-    -b BAM, --bam BAM   bam file
-
-
-
-    -s STYLE, --style STYLE
-                        ont or pb
   
   optional: 
+    -k, --keep_intermediates Keep intermediate files
+                        
+    -o, --output      Output file name
+                        
 
-    -sr SR, --sr SR       Minimum number of supporting split reads to call a variant (default 3)
+    -sr, --sr         Minimum number of supporting split reads to call a variant (default 3)
 
-     -tr TE_REF, --TE_ref TE_REF
-                          bed file with positions to avoid
-    
-    -maxsr
+    -tr , --TE_ref    bed file with positions to avoid
+                          
 
-    -m MQ, --mq MQ        Mapping quality (default 20)
