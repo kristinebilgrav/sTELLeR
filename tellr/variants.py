@@ -78,10 +78,9 @@ def get_region(bamfile, chr, start, end, cand_pos, cand_reads, readinfo, mapping
 
         # Explain_cigar = 0: matching, 1:insertion, 2:deletion, 3:ref_skip, 4:soft_clipped, 5:hard_clipped, 6:padding, 7:sequence match, 8:sequence mismatch
         # Check for soft clipped 
-        soft_clipping = check_cigar(4, cigg, 150) #list w bases to add for each soft clip OR false
-
+        soft_clipping = check_cigar(4, cigg, 20) #list w bases to add for each soft clip OR false
         # Check for insertions
-        insertions = check_cigar(1, cigg, 150) # list w bases to add for each ins OR false
+        insertions = check_cigar(1, cigg, 20) # list w bases to add for each ins OR false
  
         # Either could be a TE 
         if soft_clipping or insertions :
@@ -96,28 +95,21 @@ def get_region(bamfile, chr, start, end, cand_pos, cand_reads, readinfo, mapping
                     continue
                 for add in v[0]:
 
-                    if read.is_reverse:
-                        varpos = read_start_pos - add
-                        varpos_len= v[0][add]
-                        seqe=read.query_length - v[1][add]
-                        seqs=read.query_length - v[1][add] - varpos_len
-                        sequence = read.query_sequence[seqs:seqe] # Correct ?
-                        orientation= '-'
-                    else:
-                        varpos = read_start_pos + add
-                        varpos_len= v[0][add]
-                        seqs=v[1][add]
-                        if seqs > 100:
-                            seqs = seqs-100
-                        seqe= v[1][add] + varpos_len
-                        if seqe < read.query_length:
-                            seqe= seqe+100
-                        sequence= read.query_sequence[seqs:seqe]
-                        orientation = '+'
 
-                    if len(sequence)<1:
-                        print(read)
-                        print(seqs, seqe, read.query_length)
+                    varpos = read_start_pos + add
+                    varpos_len= v[0][add]
+                    seqs=v[1][add]
+                    if seqs > 100:
+                        seqs = seqs-100
+                    seqe= v[1][add] + varpos_len
+                    if seqe+100 < read.query_length:
+                        seqe= seqe+100
+                    sequence= read.query_sequence[seqs:seqe]
+                    orientation = '+'
+
+                    #if len(sequence)<1:
+                    #    print(read)
+                    #   print(seqs, seqe, read.query_length)
                         #print(sequence)
                         
 
@@ -157,6 +149,6 @@ def main(chr, bamfile, contig_length, mapping_quality):
     chr_len = contig_length[chr]
     for bin in range(1, chr_len-1000000, 1000000):
         get_region(bamfile, chr, bin, bin+1000000, candidates,candidate_readIDs, readinfo, mapping_quality) # Returns candidates (dict with split read and its supplementaries) for clustering
-
+    
 
     return candidates, candidate_readIDs, readinfo

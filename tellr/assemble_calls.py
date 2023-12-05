@@ -104,7 +104,7 @@ def extract_TEs(repeat_samfile):
         flag = line.flag
         if flag in avoid_flags:
             continue
-        if line.mapping_quality < 30 or line.mapping_quality == 255 :
+        if line.mapping_quality < 20 or line.mapping_quality == 255 :
             continue
         if line.is_unmapped or line.is_duplicate:
             continue
