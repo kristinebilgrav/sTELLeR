@@ -42,10 +42,8 @@ def write_vcf(variants, filename, chr_lengths, sample):
     return file
 
 def del_files(sample,chrs ):
-    os.system('rm {}_reads.txt'.format(sample))
-    os.system('rm *{}_regions.txt'.format(sample))
     for chr in chrs: 
-        candidate_prefix = chr + '_' + sample + '_candidates'
+        candidate_prefix = chr + '_' + sample + '_reads'
         os.system('rm {}.fasta'.format(candidate_prefix))
         aligned_repeats = chr + '_' + sample + '_repeats.sam'
         os.system('rm {}'.format(aligned_repeats))

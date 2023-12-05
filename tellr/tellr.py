@@ -3,6 +3,7 @@ import argparse
 import pathlib
 import os
 import pysam
+
 import variants as tellr_call_vars
 import cluster as tellr_cluster_vars
 import assemble_calls as assembleandcall
@@ -77,7 +78,6 @@ def main():
     delete= args.keep_intermediates
 
     
-    
     #bamfile.close()
 
     # Note down chromosomes and their lenght from the bam file
@@ -96,30 +96,29 @@ def main():
     repeatvariants =[]
 
     for chr in chrs:
+
         print('finding candidates on', chr)        
         candidates = tellr_call_vars.main(chr, bamfile, chr_length, mapping_quality) 
         chr_candidates = candidates[0]
-        candidates_toid = candidates[1]
-        cand_start_end = candidates[2]
-        ReadStarts=candidates[3]
-        HaploTags = candidates[4]
-        ReadToVarPos = candidates[5]
+        chr_candidatereads=candidates[1]
+        readinfo= candidates[2]
+
 
         print('clustering')
-        clustered = tellr_cluster_vars.main(chr, chr_candidates, candidates_toid, cand_start_end, sample, sr, mr, repeat_fasta )
+        clustered = tellr_cluster_vars.main(chr, chr_candidates, chr_candidatereads, readinfo, sample, sr, mr )
         if clustered == False: 
             continue
 
-        readtxtfile=clustered[1]
-        clusterToPos=clustered[3]
+        readsfile=clustered[1]
         clusterToRead=clustered[2]
 
         print('calling')
-        calls = assembleandcall.main(chr, bam_name, repeat_fasta, sample, readtxtfile, clusterToPos, clusterToRead, repeatsToAvoid, style, HaploTags, ReadStarts, ReadToVarPos) 
+        calls = assembleandcall.main(chr, bam_name, repeat_fasta, sample, readsfile, clusterToRead, repeatsToAvoid, style, readinfo, sr) 
         repeatvariants.append(list(calls))
 
     print('writing to file')
     write_calls.main(repeatvariants, chr_length, sample, chrs, delete)
+
 
 
 if __name__ == '__main__':

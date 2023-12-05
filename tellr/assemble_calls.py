@@ -10,18 +10,11 @@ maps sequence to TE and refines breakpoints
 
 def align(chr, bam_name, repeat_fasta, sample, readfile, style):
     print('starting mapping')
-    candidate_prefix = chr + '_' + sample + '_candidates'
-    regionfile= chr + '_' + sample + '_regions.txt'
-    #extract reads of interest from bam to fasta
-    bam_fasta = 'samtools view -h {} -N {} --region-file {} | samtools fasta -s stdout -n - > {}.fasta '.format(bam_name, str(readfile), regionfile ,candidate_prefix)
-    print(bam_fasta)
-    os.system(bam_fasta) 
-
     
     aligned_repeats = chr + '_' + sample + '_repeats.sam'
 
     #map candidate-fasta to TE-fasta 
-    map_repeats = 'minimap2 -ax map-{} {}  {}.fasta >  {}'.format(style,repeat_fasta,candidate_prefix, aligned_repeats)
+    map_repeats = 'minimap2 -ax map-{} {}  {} >  {}'.format(style,repeat_fasta,readfile, aligned_repeats)
     print(map_repeats)
     os.system(map_repeats) 
     
@@ -34,9 +27,11 @@ def check_cigar(flag, cigar, threshold):
     reads cigar tag and counts bases to where
     the flag (type of var) is positioned
     """
-    basesToAdd=[]
-
-    num_flags = len([tup for tup in cigar if tup[0] == flag and tup[1] > threshold])
+    basesToAdd=0
+    length=0
+    match_start=False    
+    interruptions=0
+    num_flags = len([tup for tup in cigar if tup[0] == flag ])
 
     if num_flags == 0:
         return False
@@ -45,23 +40,28 @@ def check_cigar(flag, cigar, threshold):
     add = 0
     if cigar[0][0] == flag:
         add += int(cigar[0][1])
+        length+=int(cigar[0][1])
     for c in cigar: 
         if c[0] != flag:
+
+            if match_start:
+                basesToAdd=add
+                interruptions+=c[1]
+                continue
             add += c[1]
 
-        else:   
-            if c[1] > threshold:
-                if c in num_rounds:
-                    add += c[1]
-                    continue
-                num_rounds.append(c)
-                basesToAdd.append(add)
-                if len(num_rounds) == num_flags:
-                    return basesToAdd
+        else:  
+            match_start=True 
+            length+=c[1]
+            num_rounds.append(c)
+            
+            if len(num_rounds) == num_flags:
+                if length >= threshold and interruptions < (length/2):
+                    return basesToAdd, length
             else:
                 continue
 
-    return basesToAdd
+    return basesToAdd, length
 
 
 def pos_toavoid(file): #change to pytabix
@@ -87,7 +87,8 @@ def extract_TEs(repeat_samfile):
     readToTEtype={} # Save readname and TE class
     readToTEPos={} # Save readname and position of identified TE
 
-    avoid_flags = [2048, 2064, 256]
+    #avoid_flags = [2048, 2064]
+    avoid_flags=[4]
 
     samfile = pysam.AlignmentFile(repeat_samfile, 'r')
     samfile_header = samfile.header
@@ -103,12 +104,17 @@ def extract_TEs(repeat_samfile):
         flag = line.flag
         if flag in avoid_flags:
             continue
-        if line.mapping_quality < 20:
+        if line.mapping_quality < 30 or line.mapping_quality == 255 :
             continue
-        if line.is_unmapped or line.is_duplicate or line.is_secondary:
+        if line.is_unmapped or line.is_duplicate:
             continue
+
         read = line.qname # Readname
         r_start = line.pos # Get position of repeat in read - for crossreference with breakpoints
+        cigar=line.cigar
+        match = check_cigar(0,cigar,150) # Returns when in read repeat starts and length of matching bases
+        
+
         repeat = line.reference_name # Repeat type
         if repeat not in TEs: # Confirm repeat in header
             continue
@@ -119,15 +125,16 @@ def extract_TEs(repeat_samfile):
             readToTEtype[read]=[] # Can be multiple TEs in one read
         readToTEtype[read].append(repeat) # Add all types of TEs found in read
 
+
         if repeat not in readToTEPos[read]: # Save repeat start to repeat in read
             readToTEPos[read][repeat] = [] # Can be multiple TEs in one read
-        readToTEPos[read][repeat].append(r_start)
-
-     
-    return readToTEtype, readToTEPos, TEs
+        readToTEPos[read][repeat].append(tuple(match))
 
 
-def te_breakpoints(clusterToRead, readToTEtype, readToTEPos, clusterToPos , chr, TEs, haplodict, ReadStarts, ReadToVarPos):
+    return readToTEtype, readToTEPos
+
+
+def te_breakpoints(clusterToRead, readToTEPos,  chr, readinfo, sr):
     """
     Map confirmed TEs back to clusters
     Crosscheck that confirmed TE is same as clustered candidate
@@ -136,52 +143,52 @@ def te_breakpoints(clusterToRead, readToTEtype, readToTEPos, clusterToPos , chr,
     Check that reads in cluster are mapping to same TE
     Crosscheck that TE in read is same as clustered candidate
     """
+  
     repeat_vars = []
     for c in clusterToRead:
-        
+        tematches=[]
         reads = clusterToRead[c]
-        cluster_positions= list(clusterToPos[c]) # List of all positions in one cluster
-        clusterconsensus = int(statistics.median(list(cluster_positions))) # Get middle position
-
+        clusterinfo=[]
         # Go through reads in cluster and check their TE match and haplotag
-        thisclusterTEs={}
         for r in reads:
-            if r not in readToTEtype:
+
+            if r not in readToTEPos: # If read not in dict - did not match TE
                 continue
            
-            tes= readToTEtype[r]
-            ht=haplodict[r]
-            VarStart= ReadToVarPos[r]
-            for v in VarStart:
-                if v in cluster_positions:
-                    for t in tes:
-                        if t not in thisclusterTEs:
-                            thisclusterTEs[str(t)]=[]
-                        thisclusterTEs[str(t)].append(str(ht))
+            tes= readToTEPos[r] # Can have multiple TEs - list
+            ht=readinfo[r][-2]
+            VarStart= r.split('_')[-1] # Start of variant in read 
+            varlen=readinfo[r][2]
 
-                    # Check that TE alignes with split reads and insertions
-                    #pos_matches= [i for i in range(tepos-100, tepos+100) if i  in cluster_positions]
-                    #if len(pos_matches) < 1:
-                    #   continue
-          
-        for thete in thisclusterTEs:
-            TEfrq=len(thisclusterTEs[thete])/len(reads)
-            if TEfrq > 0.6:
-                htags=list(set(thisclusterTEs[thete]))
-                if len(htags) >1:
-                    teht=','.join(htags)
-                    tegt='1|1'
+            for te in tes:
+                tematches.append(te)
+
+            rinfo=[VarStart, ht, varlen]
+            clusterinfo.append(rinfo)
+           
+
+        TEfrq=len(tematches)
+        if TEfrq > sr:
+            thete=max(set(tematches), key=tematches.count)
+
+            pos= int(statistics.median([int(i[0]) for i in clusterinfo]))
+            varlen=max([i[2] for i in clusterinfo])
+            htags=set([i[1] for i in clusterinfo])
+
+            if len(htags) >1:
+                teht=','.join(htags)
+                tegt='1|1'
+            else:
+                teht=list(htags)[0]
+                if teht == '1':
+                    tegt='1|0'
+                elif teht == '2':
+                    tegt='0|1'
                 else:
-                    teht=htags[0]
-                    if htags[0] == '1':
-                        tegt='1|0'
-                    elif htags[0] == '2':
-                        tegt='0|1'
-                    else:
-                        teht='0'
-                        tegt='0/0'
+                    teht='0'
+                    tegt='0/0'
 
-                lst = [thete, chr, str(clusterconsensus), str(clusterconsensus + int(TEs[thete])), teht, tegt ]
+                lst = [thete, chr, str(pos), str(pos + varlen), teht, tegt ]
                 if lst not in repeat_vars:
                     repeat_vars.append(lst)
 
@@ -195,16 +202,14 @@ def te_breakpoints(clusterToRead, readToTEtype, readToTEPos, clusterToPos , chr,
     return repeat_vars
 
 
-def main(chr, bam_name, repeat_fasta, sample, readfile, clusterToPos, clusterToRead, refrepeat, style, haplotags, ReadStarts, ReadToVarPos):
+def main(chr, bam_name, repeat_fasta, sample, readfile, clusterToRead, refrepeat, style, readinfo, sr):
     aligned = align(chr, bam_name, repeat_fasta, sample, readfile, style)
-    #    aligned = chr + '_' + sample + '_repeats.sam' 
     if os.path.isfile(refrepeat):
         avoid= pos_toavoid(refrepeat)
 
     tes=extract_TEs(aligned)
     readToTEtype =tes[0]
     readToTEPos = tes[1] 
-    TEs = tes[2]
-    variants = te_breakpoints(clusterToRead, readToTEtype, readToTEPos, clusterToPos, chr, TEs, haplotags, ReadStarts, ReadToVarPos)
+    variants = te_breakpoints(clusterToRead, readToTEPos, chr, readinfo, sr)
     return variants
 
