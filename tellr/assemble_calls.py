@@ -172,7 +172,7 @@ def te_breakpoints(clusterToRead, readToTEPos,  chr, readinfo, sr):
 
             pos= int(statistics.median([int(i[0]) for i in clusterinfo]))
             varlen=max([i[2] for i in clusterinfo])
-            htags=set([i[1] for i in clusterinfo])
+            htags=set([str(i[1]) for i in clusterinfo])
 
             if len(htags) >1:
                 teht=','.join(htags)

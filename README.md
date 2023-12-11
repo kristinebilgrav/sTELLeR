@@ -23,6 +23,7 @@ require python3, pysam, samtools, minimap2 and miniasm
 
   
   optional: 
+  
     -k, --keep_intermediates Keep intermediate files
                         
     -o, --output      Output file name
