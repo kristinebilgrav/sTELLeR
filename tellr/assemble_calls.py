@@ -87,7 +87,6 @@ def extract_TEs(repeat_samfile):
     readToTEtype={} # Save readname and TE class
     readToTEPos={} # Save readname and position of identified TE
 
-    #avoid_flags = [2048, 2064]
     avoid_flags=[4]
 
     samfile = pysam.AlignmentFile(repeat_samfile, 'r')

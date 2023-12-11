@@ -78,9 +78,9 @@ def get_region(bamfile, chr, start, end, cand_pos, cand_reads, readinfo, mapping
 
         # Explain_cigar = 0: matching, 1:insertion, 2:deletion, 3:ref_skip, 4:soft_clipped, 5:hard_clipped, 6:padding, 7:sequence match, 8:sequence mismatch
         # Check for soft clipped 
-        soft_clipping = check_cigar(4, cigg, 20) #list w bases to add for each soft clip OR false
+        soft_clipping = check_cigar(4, cigg, 100) #list w bases to add for each soft clip OR false
         # Check for insertions
-        insertions = check_cigar(1, cigg, 20) # list w bases to add for each ins OR false
+        insertions = check_cigar(1, cigg, 10) # list w bases to add for each ins OR false
  
         # Either could be a TE 
         if soft_clipping or insertions :
@@ -90,7 +90,6 @@ def get_region(bamfile, chr, start, end, cand_pos, cand_reads, readinfo, mapping
             
             variants = [soft_clipping, insertions]
             for v in variants:
-
                 if v == False:
                     continue
                 for add in v[0]:
@@ -131,8 +130,7 @@ def get_region(bamfile, chr, start, end, cand_pos, cand_reads, readinfo, mapping
                     infotup= (read_start_pos,varpos, varpos_len, orientation,haplotype, sequence)
                     if readdictname not in readinfo:
                         readinfo[readdictname]=infotup
-                    else:
-                        print('pos and read already assigned')
+
             
         else:
             continue
