@@ -80,7 +80,7 @@ def get_region(bamfile, chr, start, end, cand_pos, cand_reads, readinfo, mapping
         # Check for soft clipped 
         soft_clipping = check_cigar(4, cigg, 100) #list w bases to add for each soft clip OR false
         # Check for insertions
-        insertions = check_cigar(1, cigg, 10) # list w bases to add for each ins OR false
+        insertions = check_cigar(1, cigg, 100) # list w bases to add for each ins OR false
  
         # Either could be a TE 
         if soft_clipping or insertions :
