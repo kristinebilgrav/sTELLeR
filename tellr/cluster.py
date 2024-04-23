@@ -18,10 +18,10 @@ def cluster(chr, my_array, candidates_reads,readinfo,  sample, sr, mr): #fix so 
     try:
         db = DBSCAN(eps = 100, min_samples= sr).fit(my_array)
         labels = db.labels_ #[0, -1, .....ncluster]
-        n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+        n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0) # number of clusters
         print('clusters' , n_clusters_)
         n_noise_ = list(labels).count(-1)
-        print('noise', n_noise_)
+        print('noise', n_noise_) # noise
     except:
         print('no clusters found')
         return False
@@ -34,12 +34,23 @@ def cluster(chr, my_array, candidates_reads,readinfo,  sample, sr, mr): #fix so 
     txt_name = chr + '_' + sample + '_reads.fasta'
     reads_txt = open(txt_name, 'w')
 
+    # count amount of positions in each cluster
+    n_posincluster={} 
+    for l in labels:
+        if l not in n_posincluster:
+            n_posincluster[l] = 0
+        n_posincluster[l] +=1
+
+    #identify position within each cluster
     clusterToRead ={}
     for i in range(0, len(my_array)): # Map array to cluster
         label = labels[i]
         if int(label) < 0: # Skip clusters labeled -1
             continue 
-        array_pos = list(my_array[i])[0]
+        if n_posincluster[label] > mr: # skips those with too many supporting reads
+            continue
+
+        array_pos = list(my_array[i])[0] # get position beloning in the cluster
 
         # Find read name of position included in the cluster
         read=candidates_reads[i]
@@ -55,7 +66,6 @@ def cluster(chr, my_array, candidates_reads,readinfo,  sample, sr, mr): #fix so 
         sequence=readinfo[readdictid][-1]
         reads_txt.write('>'+readdictid+'\n'+sequence+'\n')
 
-    
     return db, txt_name, clusterToRead
     #return text file to use in samtools, read names to clusters and clusters with the positions it contained. Can be used to map readname back to cluster and the respective postion of the split read
 
