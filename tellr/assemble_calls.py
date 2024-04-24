@@ -35,6 +35,7 @@ def check_cigar(flag, cigar, threshold):
 
     if num_flags == 0:
         return False
+    
     num_rounds = []
 
     add = 0
@@ -103,17 +104,19 @@ def extract_TEs(repeat_samfile):
         flag = line.flag
         if flag in avoid_flags:
             continue
-        if line.mapping_quality < 20 or line.mapping_quality == 255 :
+        if line.mapping_quality == 255 :
             continue
         if line.is_unmapped or line.is_duplicate:
             continue
 
         read = line.qname # Readname
         cigar=line.cigar
-        match = check_cigar(0,cigar,100) # Returns where in read repeat starts and length of matching bases
-        
+        repeat = line.reference_name # Repeat type
+        thresh= TEs[repeat]/2
+        match = check_cigar(0,cigar,thresh) # Returns where in read repeat starts and length of matching bases
+
         if match :
-            repeat = line.reference_name # Repeat type
+            
             if repeat not in TEs: # Confirm repeat in header
                 continue
 
@@ -147,7 +150,7 @@ def te_breakpoints(clusterToRead, readToTEtype,  chr, readinfo, sr):
     for c in clusterToRead: # go throguh each cluster and all reads associated with it
         tematches=[]
         reads = clusterToRead[c] # All reads in the cluster
-        clusterinfo=[]
+        clusterinfo=[] 
 
         # Go through reads in cluster and check their TE match and haplotag
         for r in reads:
@@ -187,9 +190,9 @@ def te_breakpoints(clusterToRead, readToTEtype,  chr, readinfo, sr):
                     teht='0'
                     tegt='0/0'
 
-                lst = [thete, chr, str(pos), str(pos + varlen), teht, tegt ]
-                if lst not in repeat_vars:
-                    repeat_vars.append(lst)
+            lst = [thete, chr, str(pos), str(pos + varlen), teht, tegt ]
+            if lst not in repeat_vars:
+                repeat_vars.append(lst)
 
             # Check that its not a reference TE
             # if chr in PosToAvoid:
