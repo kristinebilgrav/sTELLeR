@@ -13,9 +13,8 @@ require python3, pysam, samtools, minimap2 and miniasm
     -tf, --TE_fasta   fasta file with sequence of elements to be detected
                           
     -b, --bam         bam file
-    -ta, --TE_avoid     bed file with positions to avoid
                          
-    -s , --style      ont or pb 
+    -s , --style      ont or pb (clr) / hifi
                           
     -r , --sr         Minimum number of supporting split reads/insertions to call a variant (default 3)
     -m , --mq         Mapping quality (default 20)

@@ -16,8 +16,8 @@ def check_cigar(flag, cigar, threshold):
     the flag (type of var) is positioned
     threshold: needs to be at least threshold amount of soft clipped / inserted bases
     """
-    RefbasesToAdd={}
-    Seqbases={}
+    RefbasesToAdd={} # amount of bases to add to ref position : insertion/splitread len
+    Seqbases={} # amount of bases to add to ref position : position in sequence
 
     num_flags = len([tup for tup in cigar if tup[0] == flag and tup[1] > threshold]) # For each pair (flag,bases) in cigar checks 0: flag and 1:bases to see if desired flag and >threshold
 
@@ -25,8 +25,8 @@ def check_cigar(flag, cigar, threshold):
         return False
     
     num_rounds =[] # Length of this to be same as length of num_flags
-    avoid = [1,5]
-    seqavoid=[2, 3, 5]
+    avoid = [1,5] # flags to avoid when appending bases to ref postion
+    seqavoid=[2, 3, 5] # flags to avoid when adding to len of total sequence
     add = 0     
     seqadd=0
     for c in cigar:
@@ -42,8 +42,8 @@ def check_cigar(flag, cigar, threshold):
             
                 if add not in RefbasesToAdd:
 
-                    RefbasesToAdd[add]=c[1]
-                    Seqbases[add]=seqadd
+                    RefbasesToAdd[add]=c[1] 
+                    Seqbases[add]=seqadd 
 
 
                 if len(num_rounds) == num_flags:
@@ -88,22 +88,23 @@ def get_region(bamfile, chr, start, end, cand_pos, cand_reads, readinfo, mapping
             # Find split read position
             # Reverse complement - opposite of others?
             
-            variants = [soft_clipping, insertions]
-            for v in variants:
+            variants = [soft_clipping, insertions] # list with tuples of dict
+
+            for v in variants: # soft clip or insertion
                 if v == False:
                     continue
-                for add in v[0]:
-
+                for add in v[0]: # go through how many bases to add to reference pos
+                
 
                     varpos = read_start_pos + add
                     varpos_len= v[0][add]
-                    seqs=v[1][add]
-                    if seqs > 100:
+                    seqs=v[1][add] # Length in sequence/bases for ins/splitread
+                    if seqs > 100: # add 100 bases around ins/spliread
                         seqs = seqs-100
                     seqe= v[1][add] + varpos_len
-                    if seqe+100 < read.query_length:
+                    if seqe+100 < read.query_length: # add 100 bases around ins/spliread
                         seqe= seqe+100
-                    sequence= read.query_sequence[seqs:seqe]
+                    sequence= read.query_sequence[seqs:seqe] # Extract region from sequence
                     orientation = '+'
 
                     #if len(sequence)<1:
