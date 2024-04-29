@@ -14,7 +14,7 @@ def align(chr, bam_name, repeat_fasta, sample, readfile, style):
     aligned_repeats = chr + '_' + sample + '_repeats.sam'
 
     #map candidate-fasta to TE-fasta 
-    map_repeats = 'minimap2 -ax map-{} -Y {}  {} >  {}'.format(style,repeat_fasta,readfile, aligned_repeats)
+    map_repeats = 'minimap2 -ax map-{} {}  {} >  {}'.format(style,repeat_fasta,readfile, aligned_repeats)
     print(map_repeats)
     os.system(map_repeats) 
     
@@ -55,7 +55,7 @@ def check_cigar(flag, cigar, threshold):
             else:
                 continue
 
-    #return length
+    return length
 
 
 def pos_toavoid(file): #change to pytabix
@@ -105,7 +105,7 @@ def extract_TEs(repeat_samfile):
         read = line.qname # Readname
         cigar=line.cigar
         repeat = line.reference_name # Repeat type
-        thresh= TEs[repeat]/2 # Threshold: at least this long to be approved
+        thresh= TEs[repeat]/4 # Threshold: at least this long to be approved
         match = check_cigar(0,cigar,thresh) # Returns where in read repeat starts and length of matching bases
         if match :
             
