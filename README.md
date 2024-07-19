@@ -61,10 +61,10 @@ require python3, pysam, samtools, minimap2 and miniasm
 
 Example to run on PB data: 
 
-  python tellr/tellr.py --ref <genome ref_file> --TE_fasta <TE sequence fasta file> --bam <bamfile> --sr 4 --style pb -o <output prefix> -mr 80
+  python tellr/tellr.py --ref < genome ref_file > --TE_fasta < TE sequence fasta file > --bam < bamfile > --sr 4 --style pb -o < output prefix > -mr 80
 
 Example to run on ONT data: 
 
-  python tellr/tellr.py --ref <genome ref_file> --TE_fasta <TE sequence fasta file> --bam <bamfile> --sr 4 --style ont -o <output prefix> -mr 80
+  python tellr/tellr.py --ref < genome ref_file > --TE_fasta < TE sequence fasta file > --bam < bamfile > --sr 4 --style ont -o < output prefix > -mr 80
 
 
