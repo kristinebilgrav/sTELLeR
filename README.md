@@ -12,9 +12,10 @@ Example scripts and fasta sequences are available at https://github.com/kristine
 
 *Option 1:*
 
-git clone [< repository >](https://github.com/kristinebilgrav/TELLR.git)
+git clone https://github.com/kristinebilgrav/TELLR.git
 
 Dependencies: 
+
 minimap2 
 pysam
 samtools
