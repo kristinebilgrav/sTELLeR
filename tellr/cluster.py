@@ -31,7 +31,7 @@ def cluster(chr, my_array, candidates_reads,readinfo,  sample, sr, mr): #fix so 
     with sequences to be checked
     """
     # Get reads of clustered positions and the regions to extract
-    txt_name = chr + '_' + sample + '_reads.fasta'
+    txt_name = sample + '_' + chr + '_reads.fasta'
     reads_txt = open(txt_name, 'w')
 
     # count amount of positions in each cluster

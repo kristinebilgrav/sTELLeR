@@ -43,9 +43,9 @@ def write_vcf(variants, filename, chr_lengths, sample):
 
 def del_files(sample,chrs ):
     for chr in chrs: 
-        candidate_prefix = chr + '_' + sample + '_reads'
+        candidate_prefix =  sample + '_' + chr + '_reads'
         os.system('rm {}.fasta'.format(candidate_prefix))
-        aligned_repeats = chr + '_' + sample + '_repeats.sam'
+        aligned_repeats = sample + '_' + chr + '_repeats.sam'
         os.system('rm {}'.format(aligned_repeats))
 
 

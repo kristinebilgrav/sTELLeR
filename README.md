@@ -10,24 +10,24 @@ Example scripts and fasta sequences are available at https://github.com/kristine
 
 # Install
 
-Option 1:
+*Option 1:*
 
-git clone < repository >
+git clone [< repository >](https://github.com/kristinebilgrav/TELLR.git)
 
 Dependencies: 
-
 minimap2 
-
 pysam
-
 samtools
 
 All available through bioconda. 
 
-Option 2: 
+*Option 2:* 
 
-Docker container containing TELLR available at:
+Dowload docker container containing TELLR available at:
 https://hub.docker.com/r/kristinebilgrav/tellr
+
+run using docker or singularity:
+python /TELLR/tellr/tellr.py 
 
 # Run
 require python3, pysam, samtools, minimap2 and miniasm
@@ -61,10 +61,12 @@ require python3, pysam, samtools, minimap2 and miniasm
 
 Example to run on PB data: 
 
-  python tellr/tellr.py --ref < genome ref_file > --TE_fasta < TE sequence fasta file > --bam < bamfile > --sr 4 --style pb -o < output prefix > -mr 80
+    python tellr/tellr.py --ref < genome ref_file > --TE_fasta < TE sequence fasta file > --bam < bamfile > --sr 4 --style pb -o < output prefix > -mr 80
 
 Example to run on ONT data: 
 
-  python tellr/tellr.py --ref < genome ref_file > --TE_fasta < TE sequence fasta file > --bam < bamfile > --sr 4 --style ont -o < output prefix > -mr 80
+    python tellr/tellr.py --ref < genome ref_file > --TE_fasta < TE sequence fasta file > --bam < bamfile > --sr 4 --style ont -o < output prefix > -mr 80
 
+NOTE: 
+If using container, use python /TELLR/tellr/tellr.py 
 

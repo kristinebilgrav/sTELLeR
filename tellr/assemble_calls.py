@@ -11,7 +11,7 @@ maps sequence to TE and refines breakpoints
 def align(chr, bam_name, repeat_fasta, sample, readfile, style):
     print('starting mapping')
     
-    aligned_repeats = chr + '_' + sample + '_repeats.sam'
+    aligned_repeats =  sample + '_' + chr + '_repeats.sam'
 
     #map candidate-fasta to TE-fasta 
     map_repeats = 'minimap2 -ax map-{} {}  {} >  {}'.format(style,repeat_fasta,readfile, aligned_repeats)
