@@ -71,3 +71,12 @@ Example to run on ONT data:
 NOTE: 
 If using container, use python /TELLR/tellr/tellr.py 
 
+
+# Output
+
+The output is given in a VCF file (https://samtools.github.io/hts-specs/VCFv4.2.pdf), which is compatible to merge with VCF files from other variant callers. 
+The variant is named INS:ME and in the info section the TE type along with start and end positions are given. 
+In the format section (TE:TS:HT:GT) items such as TE type (as given in the fasta file), TS transposon start position, HT haplotag and GT genotype (as given in the bam file) are written out. 
+
+If not specified otherwise, intermediate files containing analyzed reads (ID_chr__reads.txt) and candiate reads aligned to TEs (ID_chr_repeats.sam) will be removed. 
+
