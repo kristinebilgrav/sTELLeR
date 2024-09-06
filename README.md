@@ -2,11 +2,12 @@
 
 non-reference transposable element calling on long-read data 
 
+![TELLR_flow](https://github.com/user-attachments/assets/ac9d5989-b56f-4356-8a91-7ab51ef6392d)
+
 TELLR is a fast and CPU light tool for detection of transposable element insertion in long-read data. It is also possible to look for other insertions by giving the fasta sequence in --TE_fasta. 
-TELLR gives output in VCF file, is haplotype-aware and can run on genome assemblies
+TELLR gives output in VCF file, is haplotype-aware and can run on genome assemblies as well as on any species
 
 Example scripts and fasta sequences are available at https://github.com/kristinebilgrav/TELLR_supplementary/
-
 
 # Install
 
@@ -14,11 +15,10 @@ Example scripts and fasta sequences are available at https://github.com/kristine
 
 git clone https://github.com/kristinebilgrav/TELLR.git
 
-Dependencies: 
-
-minimap2 
-pysam
-samtools
+Install dependencies: 
+- minimap2 
+- pysam
+- samtools 
 
 All available through bioconda. 
 
@@ -27,7 +27,7 @@ All available through bioconda.
 Dowload docker container containing TELLR available at:
 https://hub.docker.com/r/kristinebilgrav/tellr
 
-run using docker or singularity:
+run using docker or singularity with:
 python /TELLR/tellr/tellr.py 
 
 # Run
