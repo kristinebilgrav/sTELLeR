@@ -1,6 +1,7 @@
 # sTELLeR
 
-non-reference transposable element calling on long-read data 
+sTELLer; (s) Transposable ELements Long (e) Read, 
+a tool for detection of non-reference transposable element using long-read data such as PacBio or ONT
 
 ![TELLR_flow](https://github.com/user-attachments/assets/ac9d5989-b56f-4356-8a91-7ab51ef6392d)
 
