@@ -25,7 +25,7 @@ All available through bioconda.
 
 *Option 2:* 
 
-Dowload docker container containing TELLR available at:
+Dowload docker container containing sTELLeR available at:
 https://hub.docker.com/r/kristinebilgrav/steller
 
 run using docker or singularity with:
