@@ -1,5 +1,5 @@
 FROM ubuntu:18.04
-#--platform linux/x86_64
+#docker build . --platform linux/x86_64
 
 RUN apt-get update && apt-get install -y  python3-pip python3-dev build-essential git zlib1g-dev perl gcc make libdbi-perl wget
 RUN pip3 install --upgrade pip
@@ -28,6 +28,6 @@ RUN conda install -c conda-forge matplotlib
 RUN conda install -c anaconda scikit-learn numpy
 RUN conda install -c bioconda samtools=1.16 pysam minimap2
 
-RUN git clone https://github.com/kristinebilgrav/TELLR.git
-RUN cd TELLR/
-#ENV PATH="TELLR/:$PATH"
+RUN git clone https://github.com/kristinebilgrav/sTELLeR.git
+RUN cd sTELLeR/
+#ENV PATH="sTELLeR/:$PATH"
