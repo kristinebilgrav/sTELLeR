@@ -8,7 +8,7 @@ a tool for detection of non-reference transposable element using long-read data 
 sTELLeR is a fast and CPU light tool for detection of transposable element insertion in long-read data. It is also possible to look for other insertions by giving the fasta sequence in --TE_fasta. 
 sTELLeR gives output in VCF file, is haplotype-aware and can run on genome assemblies as well as on any species
 
-Example scripts and fasta sequences are available at https://github.com/kristinebilgrav/TELLR_supplementary/
+Example scripts, bam test file and TE fasta sequences are available at https://github.com/kristinebilgrav/sTELLeR_supplementary/
 
 # Install
 
@@ -26,7 +26,7 @@ All available through bioconda.
 *Option 2:* 
 
 Dowload docker container containing TELLR available at:
-https://hub.docker.com/r/kristinebilgrav/tellr
+https://hub.docker.com/r/kristinebilgrav/steller
 
 run using docker or singularity with:
 python /sTELLeR/steller/steller.py 
