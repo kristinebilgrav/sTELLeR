@@ -214,20 +214,12 @@ def te_breakpoints(clusterToRead, readToTEtype, readToTEPos, chr, readinfo, sr, 
             if lst not in repeat_vars:
                 repeat_vars.append(lst)
 
-            # Check that its not a reference TE
-            # if chr in PosToAvoid:
-                # start_positions = PosToAvoid[chr]
-                # skip = [p for p in range(clusterconsensus-100, clusterconsensus+100) if p in start_positions ]#
-                # if len(skip) > 0:
-                    # continue
  
     return repeat_vars
 
 
-def main(chr, bam_name, repeat_fasta, sample, readfile, clusterToRead, refrepeat, style, readinfo, sr):
+def main(chr, bam_name, repeat_fasta, sample, readfile, clusterToRead, style, readinfo, sr):
     aligned = align(chr, bam_name, repeat_fasta, sample, readfile, style)
-    if os.path.isfile(refrepeat):
-        avoid= pos_toavoid(refrepeat)
 
     tes=extract_TEs(aligned)
     readToTEtype =tes[0]

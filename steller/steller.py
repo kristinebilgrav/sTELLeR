@@ -33,7 +33,7 @@ def main():
     parser.add_argument('-mr', '--maxreads', help='Maximum number of supporting split reads/insertions to call a variant (default 100)', required= False, default = 100)
     parser.add_argument('-m', '--mq', help='Mapping quality (default 20)', required= False, default = 20)
     parser.add_argument('-k', '--keep_intermediates', help='Keep intermediate files', required= False, action="store_false")
-    parser.add_argument('-o', '--output', help='Output file name', required= False, default='TEsample')
+    parser.add_argument('-o', '--output', help='Output file name', required= False)
 
     args = parser.parse_args()
 
@@ -74,10 +74,6 @@ def main():
         sample_id=bam_name.split("/")[-1].split(".bam")[0]
     sample=sample_id
 
-    if args.TE_avoid is None :
-        repeatsToAvoid = False
-    else:
-        repeatsToAvoid = args.TE_avoid
     
 
     delete= args.keep_intermediates
@@ -118,7 +114,7 @@ def main():
         clusterToRead=clustered[2]
 
         print('calling')
-        calls = assembleandcall.main(chr, bam_name, repeat_fasta, sample, readsfile, clusterToRead, repeatsToAvoid, style, readinfo, sr) 
+        calls = assembleandcall.main(chr, bam_name, repeat_fasta, sample, readsfile, clusterToRead,  style, readinfo, sr) 
         repeatvariants.append(list(calls))
 
     print('writing to file')
