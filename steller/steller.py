@@ -24,16 +24,16 @@ def main():
         description='calls non-reference transposable elements given in a long-read pacbio or ont bam file'
     )
 
-    parser.add_argument('-R', '--ref', help='reference genome')
+    parser.add_argument('-R', '--ref', help='reference genome', required=True, type=pathlib.Path)
     parser.add_argument('-tf', '--TE_fasta', help='fasta file with elements to be detected', required=True, type=pathlib.Path)
     parser.add_argument('-b', '--bam', help='bam file', required= True, type=pathlib.Path)
-    parser.add_argument('-ta', '--TE_avoid', help='bed file with positions to avoid', required= False, type=pathlib.Path)
+    #parser.add_argument('-ta', '--TE_avoid', help='bed file with positions to avoid', required= False, type=pathlib.Path)
     parser.add_argument('-s', '--style', help='ont or pb', required= True, type=pathlib.Path)
     parser.add_argument('-r', '--sr', help='Minimum number of supporting split reads/insertions to call a variant (default 3)', required= False, default = 3)
     parser.add_argument('-mr', '--maxreads', help='Maximum number of supporting split reads/insertions to call a variant (default 100)', required= False, default = 100)
     parser.add_argument('-m', '--mq', help='Mapping quality (default 20)', required= False, default = 20)
     parser.add_argument('-k', '--keep_intermediates', help='Keep intermediate files', required= False, action="store_false")
-    parser.add_argument('-o', '--output', help='Output file name', required= False)
+    parser.add_argument('-o', '--output', help='Output file name', required= False, default='TEsample')
 
     args = parser.parse_args()
 
@@ -48,8 +48,12 @@ def main():
         print('Error, cannot find TE fasta file')
         quit()
 
+    elif not os.path.isfile(args.ref) :
+        print('Error, cannot find TE fasta file')
+        quit()
+
     else:
-        parser.print_help()
+        print(' '.join(['Starting sTELLeR on',str(args.style) ,'file', str(args.bam), 'with', str(args.TE_fasta), 'and',str(args.ref)]) )
 
     """
     define parameters needed in modules
