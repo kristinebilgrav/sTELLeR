@@ -62,6 +62,7 @@ def main():
     bam_name = str(args.bam)
     bamfile = pysam.AlignmentFile(bam_name, "rb", reference_filename = args.ref)
     bam_header= bamfile.header
+    ref= args.ref
 
     if args.output:
         sample_id=args.output
@@ -117,7 +118,7 @@ def main():
         repeatvariants.append(list(calls))
 
     print('writing to file')
-    write_calls.main(repeatvariants, chr_length, sample, chrs, delete)
+    write_calls.main(repeatvariants, chr_length, sample, chrs, delete, ref)
 
 
 

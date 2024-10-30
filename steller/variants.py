@@ -10,7 +10,7 @@ get sequence
 compare sequence to input file
 """
 
-def check_cigar(flag, cigar, threshold):
+def check_cigar(flag, cigar, threshold): 
     """
     Reads cigar tag and counts bases to where
     the flag (type of var) is positioned

@@ -2,6 +2,7 @@ import os
 import gzip as gz
 import pysam
 import statistics
+import numpy as np
 
 """
 maps sequence to TE and refines breakpoints
@@ -105,7 +106,7 @@ def extract_TEs(repeat_samfile):
         read = line.qname # Readname
         cigar=line.cigar
         repeat = line.reference_name # Repeat type
-        thresh= TEs[repeat]/4 # Threshold: at least this long to be approved
+        thresh= TEs[repeat]/4 # Threshold: at least this long to be approved (25% of sequence)
         match = check_cigar(0,cigar,thresh) # Returns where in read repeat starts and length of matching bases
         if match :
             
@@ -125,8 +126,14 @@ def extract_TEs(repeat_samfile):
 
     return readToTEtype , readToTEPos
 
+def get_coverage(bamfile, chr, start, end):
+    samfile = pysam.AlignmentFile(bamfile, "rb" )
+    cov_array= samfile.count_coverage(chr, start, end, quality_threshold=0)
+    cov= np.sum(cov_array)
+    return cov
 
-def te_breakpoints(clusterToRead, readToTEtype, readToTEPos, chr, readinfo, sr):
+
+def te_breakpoints(clusterToRead, readToTEtype, readToTEPos, chr, readinfo, sr, bamfile):
     """
     Map confirmed TEs back to clusters
     Crosscheck that confirmed TE is same as clustered candidate
@@ -182,18 +189,26 @@ def te_breakpoints(clusterToRead, readToTEtype, readToTEPos, chr, readinfo, sr):
             varlen=max([i[2] for i in clusterinfo])
             htags=set([str(i[1]) for i in clusterinfo])
 
-            if len(htags) >1:
+            if len(htags) >1: # TE present in both alleles
                 teht=','.join(htags)
                 tegt='1|1'
             else:
-                teht=list(htags)[0]
+                teht=list(htags)[0] # heterozygous TE
                 if teht == '1':
                     tegt='1|0'
                 elif teht == '2':
                     tegt='0|1'
-                else:
+                else: # not a phased file
                     teht='0'
-                    tegt='0/0'
+                    tegt='1/0'
+                    cov= get_coverage(bamfile, chr, pos, pos+1)
+                    rate= TEfrq/cov
+                    if rate < 0.5:
+                        tegt='1/0'
+                    else:
+                        tegt='1/1'
+                    
+
 
             lst = [thete, chr, str(pos), str(pos + varlen), teht, tegt ]
             if lst not in repeat_vars:
@@ -217,6 +232,6 @@ def main(chr, bam_name, repeat_fasta, sample, readfile, clusterToRead, refrepeat
     tes=extract_TEs(aligned)
     readToTEtype =tes[0]
     readToTEPos = tes[1] 
-    variants = te_breakpoints(clusterToRead, readToTEtype, readToTEPos, chr, readinfo, sr)
+    variants = te_breakpoints(clusterToRead, readToTEtype, readToTEPos, chr, readinfo, sr, bam_name)
     return variants
 

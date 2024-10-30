@@ -61,6 +61,9 @@ require python3, pysam, samtools, minimap2 and miniasm
 
     -tr , --TE_ref    bed file with positions to avoid
 
+NOTE: 
+If using container, use python /sTELLeR/steller/steller.py 
+
 Example to run on PB data: 
 
     python steller/steller.py --ref < genome ref_file > --TE_fasta < TE sequence fasta file > --bam < bamfile > --sr 4 --style pb -o < output prefix > -mr 80
@@ -69,9 +72,10 @@ Example to run on ONT data:
 
     python steller/steller.py --ref < genome ref_file > --TE_fasta < TE sequence fasta file > --bam < bamfile > --sr 4 --style ont -o < output prefix > -mr 80
 
-NOTE: 
-If using container, use python /sTELLeR/steller/steller.py 
-
+Example using test data located in: https://github.com/kristinebilgrav/sTELLeR_supplementary/
+Download all files in repository and run: 
+    python steller/steller.py --ref HG38_masked_noNN_chr22.fa --TE_fasta fasta/TEfastasequences.fa --bam testdata.bam --sr 4 --style pb -o testdata_res -mr 80
+Results will be given in testdata_res_repeats.vcf and correct results can be verified by comparing to the provided file testbamTRUTH.txt - a total of 7 variants should be identified.  
 
 # Output
 
