@@ -66,7 +66,7 @@ require python3, pysam, samtools, minimap2
     -mr, --maxreads   Maximum number of supporting split reads/insertions to call a variant (default 100)
 
 
-The intermediate files (--keep_intermediates) include per-chromosome fasta files with candidate insertions as well as SAM files with aligned insertions. Can be useful to have in case of interest in each insertions specific sequence. \
+The intermediate files (--keep_intermediates) include per-chromosome fasta files with candidate insertions as well as SAM files with aligned insertions. \
 Supporting reads (--sr) of a insertion depends on the coverage of the sample and the desired sensitivity.\
 Mapping quality (--mq) is a threshold of accepted TE calls to the specific TE sequence. \
 Maximum number of reads (--maxreads) can be adjusted to avoid calls in outlying regions. 
@@ -104,5 +104,5 @@ The output is given in a [VCF file](https://samtools.github.io/hts-specs/VCFv4.2
 The variant is named INS:ME and in the info section the TE type along with start and end positions are given. \
 In the format section (TE:TS:HT:GT) items such as TE type (as given in the fasta file), TS transposon start position, HT haplotag (0 if not phased) and GT genotype (1/0 or 1/1 for unphased and 1|0, 0|1 or 1|1 for phased) are written out. 
 
-If not specified otherwise, intermediate files containing analyzed reads (ID_chr_reads.txt) and candiate reads aligned to TEs (ID_chr_repeats.sam) will be removed. 
+If not specified otherwise, intermediate files containing fasta sequences of candidate insertions (ID_chr_reads.fasta) and candiate reads aligned to TEs (ID_chr_repeats.sam) will be removed. 
 
